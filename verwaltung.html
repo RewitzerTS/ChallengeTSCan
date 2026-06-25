@@ -1,5 +1,242 @@
 <!doctype html>
 <html lang="de">
-  <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Verwaltung | Top Sports Partnerverwaltung</title><link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800&display=swap" rel="stylesheet" /><link rel="stylesheet" href="styles.css" /></head>
-  <body><a class="skip-link" href="#main-content">Zum Inhalt springen</a><div class="app-shell"><aside class="sidebar" aria-label="Hauptnavigation"><div class="brand"><img src="https://cdn.prod.website-files.com/6399b5dbb6020e1a3d81ce8d/6399c9a6b6439fd0327dcf5e_Vector%2038.svg" alt="Top Sports Fitness" /><div class="brand-fallback" aria-hidden="true"><strong>TOP SPORTS</strong><span>FITNESS</span></div></div><nav class="nav-list" id="desktopNav"></nav><section class="role-card" aria-label="Nutzerbereich"><span>Angemeldet als</span><strong id="currentRoleLabel">Mitarbeiter</strong><button class="btn btn-secondary" id="roleToggle" type="button">Admin-Modus</button></section></aside><div class="main-panel"><header class="topbar"><div class="mobile-brand"><img src="https://cdn.prod.website-files.com/6399b5dbb6020e1a3d81ce8d/6399c9a6b6439fd0327dcf5e_Vector%2038.svg" alt="" /><strong>Partnerverwaltung</strong></div><div class="breadcrumb"><span>Top Sports</span><span>/</span><strong id="breadcrumbPage">Verwaltung</strong></div><label class="top-search" for="globalSearch"><span>⌕</span><input id="globalSearch" type="search" placeholder="Partner suchen" autocomplete="off" /></label></header><main id="main-content" class="content" tabindex="-1"><section class="page-header"><div><p class="eyebrow" id="pageEyebrow">Verwaltung</p><h1 id="pageTitle">Partner verwalten</h1><p id="pageDescription">Kooperationen anlegen, bearbeiten und löschen.</p></div><button class="btn btn-primary" id="pagePrimaryAction" type="button">+ Partner speichern</button></section><section class="kpi-grid" id="kpiGrid" aria-label="Kennzahlen"></section><section class="filters-card" aria-label="Suche und Filter"><label class="search-field" for="partnerSearch"><span>⌕</span><input id="partnerSearch" type="search" placeholder="Partner suchen" /></label><select id="studioFilter" aria-label="Studio filtern"><option value="alle">Alle Studios</option><option>Echterdingen</option><option>Reutlingen</option><option>Leinfelden</option><option>Kornwestheim</option><option>Nürtingen</option><option>Degerloch</option></select></section><section class="dashboard-grid" id="overviewSections" hidden></section><section class="admin-layout" id="adminPanel"><article class="card"><div class="card-header"><div><h2>Partner anlegen</h2><p>Neue Firmen- oder Vereinskooperation erfassen.</p></div></div><form id="partnerForm" class="partner-form"><input type="hidden" id="partnerId" /><div class="form-grid"><label><span>Partnerart</span><select id="partnerType" required><option value="firma">Firmenfitness</option><option value="verein">Vereinsfitness</option></select></label><label><span>Firma oder Verein</span><input id="partnerName" required placeholder="z. B. Bosch GmbH" /></label><label><span>Ansprechpartner</span><input id="contactName" required placeholder="Vor- und Nachname" /></label><label><span>Telefon</span><input id="contactPhone" required type="tel" placeholder="+49 711 000000" /></label><label><span>E-Mail</span><input id="contactEmail" required type="email" placeholder="kontakt@unternehmen.de" /></label><label><span>Zuständiges Studio</span><select id="partnerStudio" required><option>Echterdingen</option><option>Reutlingen</option><option>Leinfelden</option><option>Kornwestheim</option><option>Nürtingen</option><option>Degerloch</option></select></label><label><span>Kooperation geschlossen von</span><input id="closedBy" required placeholder="z. B. Studioleitung Reutlingen" /></label><label><span>Letzter Kontakt</span><input id="lastContact" required type="date" /></label><label class="wide"><span>Konditionen</span><textarea id="conditions" required placeholder="z. B. Firmenfitness 1 Monat 39 EUR"></textarea></label><label class="wide"><span>Besonderheiten</span><textarea id="notes" placeholder="Interne Hinweise, Nachweise, Sonderregeln"></textarea></label></div><p class="form-error" id="formError" role="alert" hidden>Bitte fülle alle Pflichtfelder korrekt aus.</p><div class="form-actions"><button class="btn btn-ghost" id="cancelEdit" type="button">Zurücksetzen</button><button class="btn btn-primary" type="submit">Speichern</button></div></form></article></section><section class="card list-card" aria-labelledby="partnerListTitle"><div class="card-header list-header"><div><h2 id="partnerListTitle">Partnerliste</h2><p id="resultCount">0 Einträge</p></div><button class="btn btn-secondary" id="resetFilters" type="button">Filter zurücksetzen</button></div><div class="table-wrap"><table><thead></thead><tbody id="partnerTableBody"></tbody></table></div><div class="mobile-list" id="partnerMobileList"></div><div class="empty-state" id="emptyState" hidden><h3>Keine Partner gefunden</h3><p>Prüfe Suchbegriff oder Filter.</p><button class="btn btn-secondary" id="emptyReset" type="button">Filter zurücksetzen</button></div></section></main></div></div><nav class="bottom-nav" id="mobileNav" aria-label="Mobile Navigation"></nav><div class="drawer-backdrop" id="detailBackdrop" hidden></div><aside class="drawer" id="detailDrawer" aria-labelledby="drawerTitle" aria-hidden="true"><div class="drawer-header"><div><p class="eyebrow" id="drawerType">Partner</p><h2 id="drawerTitle">Details</h2></div><button class="icon-btn" id="closeDrawer" type="button" aria-label="Details schließen">×</button></div><div class="drawer-body" id="drawerBody"></div></aside><div class="toast" id="toast" role="status" aria-live="polite" hidden></div><script src="app.js"></script></body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Top Sports Partnerverwaltung</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .partner-form fieldset {
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+
+      .partner-form legend {
+        margin-bottom: 10px;
+        color: var(--text, var(--color-text));
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .condition-editor {
+        display: grid;
+        gap: 14px;
+      }
+
+      .term-options,
+      .fee-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .choice-option {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 14px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--secondary, var(--color-text-secondary));
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .choice-option input {
+        width: 16px;
+        height: 16px;
+        padding: 0;
+        accent-color: var(--red, var(--color-red));
+      }
+
+      .choice-option:has(input:checked) {
+        border-color: rgba(227, 6, 19, 0.35);
+        background: rgba(227, 6, 19, 0.16);
+        color: var(--text, var(--color-text));
+      }
+
+      .amount-field {
+        max-width: 320px;
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Zum Inhalt springen</a>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Hauptnavigation">
+        <div class="brand">
+          <img
+            src="https://cdn.prod.website-files.com/6399b5dbb6020e1a3d81ce8d/6399c9a6b6439fd0327dcf5e_Vector%2038.svg"
+            alt="Top Sports Fitness"
+          />
+          <div class="brand-fallback" aria-hidden="true">
+            <strong>TOP SPORTS</strong>
+            <span>FITNESS</span>
+          </div>
+        </div>
+        <nav class="nav-list" id="desktopNav"></nav>
+        <section class="role-card" aria-label="Nutzerbereich">
+          <span>Angemeldet als</span>
+          <strong id="currentRoleLabel">Mitarbeiter</strong>
+          <button class="btn btn-secondary" id="roleToggle" type="button">Admin-Modus</button>
+        </section>
+      </aside>
+
+      <div class="main-panel">
+        <header class="topbar">
+          <div class="mobile-brand">
+            <img
+              src="https://cdn.prod.website-files.com/6399b5dbb6020e1a3d81ce8d/6399c9a6b6439fd0327dcf5e_Vector%2038.svg"
+              alt=""
+            />
+            <strong>Partnerverwaltung</strong>
+          </div>
+          <div class="breadcrumb">
+            <span>Top Sports</span>
+            <span>/</span>
+            <strong id="breadcrumbPage">Übersicht</strong>
+          </div>
+          <label class="top-search" for="globalSearch">
+            <span>⌕</span>
+            <input id="globalSearch" type="search" placeholder="Partner suchen" autocomplete="off" />
+          </label>
+        </header>
+
+        <main id="main-content" class="content" tabindex="-1">
+          <section class="page-header">
+            <div>
+              <p class="eyebrow" id="pageEyebrow">Partnerdatenbank</p>
+              <h1 id="pageTitle">Kooperationspartner im Überblick</h1>
+              <p id="pageDescription">Suche Firmen- und Vereinsfitnesspartner und prüfe die Konditionen.</p>
+            </div>
+            <button class="btn btn-primary" id="pagePrimaryAction" type="button">+ Partner anlegen</button>
+          </section>
+
+          <section class="kpi-grid" id="kpiGrid" aria-label="Kennzahlen"></section>
+
+          <section class="filters-card" aria-label="Suche und Filter">
+            <label class="search-field" for="partnerSearch">
+              <span>⌕</span>
+              <input id="partnerSearch" type="search" placeholder="z. B. Bosch, VfL, Firmenfitness 39" />
+            </label>
+            <select id="studioFilter" aria-label="Studio filtern">
+              <option value="alle">Alle Studios</option>
+              <option>Echterdingen</option>
+              <option>Reutlingen</option>
+              <option>Leinfelden</option>
+              <option>Kornwestheim</option>
+              <option>Nürtingen</option>
+              <option>Degerloch</option>
+            </select>
+          </section>
+
+          <section class="dashboard-grid" id="overviewSections">
+            <article class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Schnellzugriff</h2>
+                  <p>Direkt in den passenden Arbeitsbereich wechseln.</p>
+                </div>
+              </div>
+              <div class="quick-actions">
+                <button data-quick="firma">Firmenpartner prüfen</button>
+                <button data-quick="verein">Vereinspartner prüfen</button>
+                <button data-quick="verwaltung">Datensatz verwalten</button>
+              </div>
+            </article>
+          </section>
+
+          <section class="card list-card" aria-labelledby="partnerListTitle">
+            <div class="card-header list-header">
+              <div>
+                <h2 id="partnerListTitle">Partnerliste</h2>
+                <p id="resultCount">0 Einträge</p>
+              </div>
+              <button class="btn btn-secondary" id="resetFilters" type="button">Filter zurücksetzen</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead></thead>
+                <tbody id="partnerTableBody"></tbody>
+              </table>
+            </div>
+            <div class="mobile-list" id="partnerMobileList"></div>
+            <div class="empty-state" id="emptyState" hidden>
+              <h3>Keine Partner gefunden</h3>
+              <p>Prüfe Suchbegriff oder Filter.</p>
+              <button class="btn btn-secondary" id="emptyReset" type="button">Filter zurücksetzen</button>
+            </div>
+          </section>
+
+          <section class="admin-layout" id="adminPanel" hidden>
+            <article class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Partner anlegen</h2>
+                  <p>Neue Firmen- oder Vereinskooperation erfassen.</p>
+                </div>
+              </div>
+              <form id="partnerForm" class="partner-form">
+                <input type="hidden" id="partnerId" />
+                <div class="form-grid">
+                  <label><span>Partnerart</span><select id="partnerType" required><option value="firma">Firmenfitness</option><option value="verein">Vereinsfitness</option></select></label>
+                  <label><span>Firma oder Verein</span><input id="partnerName" required placeholder="z. B. Bosch GmbH" /></label>
+                  <label><span>Ansprechpartner</span><input id="contactName" required placeholder="Vor- und Nachname" /></label>
+                  <label><span>Telefon</span><input id="contactPhone" required type="tel" placeholder="+49 711 000000" /></label>
+                  <label><span>E-Mail</span><input id="contactEmail" required type="email" placeholder="kontakt@unternehmen.de" /></label>
+                  <label><span>Zuständiges Studio</span><select id="partnerStudio" required><option>Echterdingen</option><option>Reutlingen</option><option>Leinfelden</option><option>Kornwestheim</option><option>Nürtingen</option><option>Degerloch</option></select></label>
+                  <label><span>Kooperation geschlossen von</span><input id="closedBy" required placeholder="z. B. Studioleitung Reutlingen" /></label>
+                  <label><span>Letzter Kontakt</span><input id="lastContact" required type="date" /></label>
+                  <fieldset class="condition-editor wide">
+                    <legend>Konditionen</legend>
+                    <div class="term-options" role="radiogroup" aria-label="Laufzeit auswählen">
+                      <label class="choice-option"><input id="term1" name="termMonths" type="radio" value="1" required /><span>1 Monat</span></label>
+                      <label class="choice-option"><input id="term12" name="termMonths" type="radio" value="12" checked /><span>12 Monate</span></label>
+                      <label class="choice-option"><input id="term24" name="termMonths" type="radio" value="24" /><span>24 Monate</span></label>
+                    </div>
+                    <label class="amount-field" for="termAmount"><span>Betrag für diese Laufzeit</span><input id="termAmount" required inputmode="decimal" placeholder="z. B. 39,00" /></label>
+                    <div class="fee-options">
+                      <label class="choice-option"><input id="hasTransponderFee" type="checkbox" /><span>Transponder einmalig 29,90 €</span></label>
+                      <label class="choice-option"><input id="hasServiceFee" type="checkbox" /><span>Servicepauschale halbjährlich 29,90 €</span></label>
+                    </div>
+                    <input id="conditions" type="hidden" />
+                  </fieldset>
+                  <label class="wide"><span>Besonderheiten</span><textarea id="notes" placeholder="Interne Hinweise, Nachweise, Sonderregeln"></textarea></label>
+                </div>
+                <p class="form-error" id="formError" role="alert" hidden>Bitte fülle alle Pflichtfelder korrekt aus.</p>
+                <div class="form-actions">
+                  <button class="btn btn-ghost" id="cancelEdit" type="button">Zurücksetzen</button>
+                  <button class="btn btn-primary" type="submit">Speichern</button>
+                </div>
+              </form>
+            </article>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <nav class="bottom-nav" id="mobileNav" aria-label="Mobile Navigation"></nav>
+    <div class="drawer-backdrop" id="detailBackdrop" hidden></div>
+    <aside class="drawer" id="detailDrawer" aria-labelledby="drawerTitle" aria-hidden="true">
+      <div class="drawer-header">
+        <div>
+          <p class="eyebrow" id="drawerType">Partner</p>
+          <h2 id="drawerTitle">Details</h2>
+        </div>
+        <button class="icon-btn" id="closeDrawer" type="button" aria-label="Details schließen">×</button>
+      </div>
+      <div class="drawer-body" id="drawerBody"></div>
+    </aside>
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+    <script src="app.js"></script>
+  </body>
 </html>
