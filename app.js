@@ -167,6 +167,32 @@ function typeLabel(type) {
   return type === "firma" ? "Firmenfitness" : "Vereinsfitness";
 }
 
+function formatMoney(value) {
+  const raw = String(value ?? "").trim().replace("€", "").replace(/eur/i, "").trim();
+  const parsed = Number(raw.replace(/\./g, "").replace(",", "."));
+  if (!raw) return "";
+  if (Number.isNaN(parsed)) return raw;
+  return new Intl.NumberFormat("de-DE", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(parsed);
+}
+
+function formatPartnerConditions(partner) {
+  if (partner.termMonths && partner.termAmount) {
+    const months = Number(partner.termMonths);
+    const duration = months === 1 ? "1 Monat" : `${months} Monate`;
+    const fees = [];
+
+    if (partner.hasTransponderFee) fees.push("zzgl. einmalig 29,90 € Transpondergebühr");
+    if (partner.hasServiceFee) fees.push("zzgl. 29,90 € halbjährliche Servicepauschale");
+
+    return `${typeLabel(partner.type)} ${duration} ${formatMoney(partner.termAmount)} €${fees.length ? `, ${fees.join(" und ")}` : ""}.`;
+  }
+
+  return partner.conditions || "";
+}
+
 function formatDate(value) {
   return new Intl.DateTimeFormat("de-DE", {
     day: "2-digit",
@@ -198,11 +224,12 @@ function filteredPartners() {
   return state.partners.filter((partner) => {
     const matchesType = filter === "alle" || partner.type === filter;
     const matchesStudio = state.studio === "alle" || partner.studio === state.studio;
-    const publicText = [partner.name, typeLabel(partner.type), partner.conditions].join(" ").toLowerCase();
+    const conditionText = formatPartnerConditions(partner);
+    const publicText = [partner.name, typeLabel(partner.type), conditionText].join(" ").toLowerCase();
     const adminText = [
       partner.name,
       typeLabel(partner.type),
-      partner.conditions,
+      conditionText,
       partner.contactName,
       partner.contactEmail,
       partner.contactPhone,
@@ -343,6 +370,7 @@ function ensureExportButton() {
 }
 
 function renderTableRow(partner) {
+  const conditionText = formatPartnerConditions(partner);
   const adminColumns = isAdmin()
     ? `
       <td><div class="partner-name"><strong>${partner.contactName}</strong><span>${partner.contactEmail}</span></div></td>
@@ -355,7 +383,7 @@ function renderTableRow(partner) {
     <tr>
       <td><div class="partner-name"><strong>${partner.name}</strong><span>${isAdmin() ? partner.studio : typeLabel(partner.type)}</span></div></td>
       <td>${typeLabel(partner.type)}</td>
-      <td>${partner.conditions}</td>
+      <td>${conditionText}</td>
       ${adminColumns}
       <td><div class="row-actions"><button class="icon-btn" type="button" data-view="${partner.id}" aria-label="${partner.name} öffnen">↗</button>${adminActions(partner)}</div></td>
     </tr>
@@ -363,6 +391,7 @@ function renderTableRow(partner) {
 }
 
 function renderMobileCard(partner) {
+  const conditionText = formatPartnerConditions(partner);
   const adminMeta = isAdmin()
     ? `<span>${partner.contactName} · ${partner.contactPhone}</span><span>Letzter Kontakt: ${formatDate(partner.lastContact)}</span>`
     : "";
@@ -373,7 +402,7 @@ function renderMobileCard(partner) {
         <div class="partner-name"><strong>${partner.name}</strong><span>${typeLabel(partner.type)}${isAdmin() ? ` · ${partner.studio}` : ""}</span></div>
         ${isAdmin() ? statusBadge(partner.status) : ""}
       </div>
-      <div class="mobile-meta"><span>${partner.conditions}</span>${adminMeta}</div>
+      <div class="mobile-meta"><span>${conditionText}</span>${adminMeta}</div>
       <div class="mobile-actions"><button class="btn btn-secondary" type="button" data-view="${partner.id}">Öffnen</button>${isAdmin() ? `<button class="btn btn-danger" type="button" data-delete="${partner.id}">Löschen</button>` : ""}</div>
     </article>
   `;
@@ -390,6 +419,7 @@ function adminActions(partner) {
 function openDrawer(id) {
   const partner = state.partners.find((item) => item.id === id);
   if (!partner) return;
+  const conditionText = formatPartnerConditions(partner);
 
   const adminSections = isAdmin()
     ? `
@@ -402,7 +432,7 @@ function openDrawer(id) {
 
   els.drawerType.textContent = typeLabel(partner.type);
   els.drawerTitle.textContent = partner.name;
-  els.drawerBody.innerHTML = `<div class="detail-section"><span>Konditionen</span><p>${partner.conditions}</p></div>${adminSections}`;
+  els.drawerBody.innerHTML = `<div class="detail-section"><span>Konditionen</span><p>${conditionText}</p></div>${adminSections}`;
   els.detailBackdrop.hidden = false;
   els.detailDrawer.classList.add("is-open");
   els.detailDrawer.setAttribute("aria-hidden", "false");
@@ -447,7 +477,13 @@ function fillForm(partner) {
   $("#partnerStudio").value = partner.studio;
   $("#closedBy").value = partner.closedBy;
   $("#lastContact").value = partner.lastContact;
-  $("#conditions").value = partner.conditions;
+  const term = partner.termMonths || "12";
+  const termInput = document.querySelector(`input[name="termMonths"][value="${term}"]`);
+  if (termInput) termInput.checked = true;
+  if ($("#termAmount")) $("#termAmount").value = partner.termAmount || "";
+  if ($("#hasTransponderFee")) $("#hasTransponderFee").checked = Boolean(partner.hasTransponderFee);
+  if ($("#hasServiceFee")) $("#hasServiceFee").checked = Boolean(partner.hasServiceFee);
+  $("#conditions").value = formatPartnerConditions(partner);
   $("#notes").value = partner.notes;
 }
 
@@ -464,6 +500,7 @@ function handleFormSubmit(event) {
   }
 
   const id = $("#partnerId").value || `p-${Date.now()}`;
+  const selectedTerm = document.querySelector('input[name="termMonths"]:checked');
   const partner = {
     id,
     type: $("#partnerType").value,
@@ -474,10 +511,15 @@ function handleFormSubmit(event) {
     studio: $("#partnerStudio").value,
     closedBy: $("#closedBy").value.trim(),
     lastContact: $("#lastContact").value,
-    conditions: $("#conditions").value.trim(),
+    termMonths: selectedTerm ? selectedTerm.value : "12",
+    termAmount: $("#termAmount") ? $("#termAmount").value.trim() : "",
+    hasTransponderFee: $("#hasTransponderFee") ? $("#hasTransponderFee").checked : false,
+    hasServiceFee: $("#hasServiceFee") ? $("#hasServiceFee").checked : false,
+    conditions: "",
     notes: $("#notes").value.trim(),
     status: "aktiv",
   };
+  partner.conditions = formatPartnerConditions(partner);
 
   const existing = state.partners.findIndex((item) => item.id === id);
   if (existing >= 0) state.partners[existing] = partner;
@@ -493,6 +535,10 @@ function resetForm() {
   els.partnerForm.reset();
   $("#partnerId").value = "";
   $("#lastContact").value = new Date().toISOString().slice(0, 10);
+  if ($("#term12")) $("#term12").checked = true;
+  if ($("#termAmount")) $("#termAmount").value = "";
+  if ($("#hasTransponderFee")) $("#hasTransponderFee").checked = false;
+  if ($("#hasServiceFee")) $("#hasServiceFee").checked = false;
   els.formError.hidden = true;
 }
 
@@ -530,7 +576,7 @@ function exportCurrentPartners() {
   const rows = filteredPartners().map((partner) => [
     partner.name,
     typeLabel(partner.type),
-    partner.conditions,
+    formatPartnerConditions(partner),
     partner.contactName,
     partner.contactPhone,
     partner.contactEmail,
