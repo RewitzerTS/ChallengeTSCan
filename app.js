@@ -108,6 +108,7 @@ const state = {
   role: localStorage.getItem("tsf-role") || "employee",
   query: "",
   studio: "alle",
+  formOpen: false,
   partners: loadPartners(),
 };
 
@@ -179,6 +180,23 @@ function formatMoney(value) {
 }
 
 function formatPartnerConditions(partner) {
+  if (Array.isArray(partner.terms) && partner.terms.length) {
+    const tariffText = partner.terms
+      .filter((term) => term.months && term.amount)
+      .map((term) => {
+        const months = Number(term.months);
+        const duration = months === 1 ? "1 Monat" : `${months} Monate`;
+        return `${duration} ${formatMoney(term.amount)} €`;
+      })
+      .join(" / ");
+    const fees = [];
+
+    if (partner.hasTransponderFee) fees.push("zzgl. einmalig 29,90 € Transpondergebühr");
+    if (partner.hasServiceFee) fees.push("zzgl. 29,90 € halbjährliche Servicepauschale");
+
+    return `${typeLabel(partner.type)} ${tariffText}${fees.length ? `, ${fees.join(" und ")}` : ""}.`;
+  }
+
   if (partner.termMonths && partner.termAmount) {
     const months = Number(partner.termMonths);
     const duration = months === 1 ? "1 Monat" : `${months} Monate`;
@@ -455,6 +473,10 @@ function editPartner(id) {
   if (!partner) return;
   state.role = "admin";
   localStorage.setItem("tsf-role", state.role);
+  if (state.page === "verwaltung") {
+    openPartnerForm(partner);
+    return;
+  }
   window.location.href = `verwaltung.html?edit=${encodeURIComponent(id)}`;
 }
 
@@ -467,6 +489,62 @@ function deletePartner(id) {
   showToast(`${partner.name} wurde gelöscht.`);
 }
 
+function openPartnerForm(partner = null) {
+  if (!isAdmin() || state.page !== "verwaltung") return;
+  state.formOpen = true;
+  els.adminPanel.hidden = false;
+  document.body.classList.add("modal-open");
+  if (partner) fillForm(partner);
+  else resetForm();
+  setTimeout(() => $("#partnerName")?.focus(), 0);
+}
+
+function closePartnerForm() {
+  state.formOpen = false;
+  els.adminPanel.hidden = true;
+  document.body.classList.remove("modal-open");
+  resetForm();
+}
+
+function getSelectedTermsFromForm() {
+  return Array.from(document.querySelectorAll("[data-term-row]"))
+    .map((row) => {
+      const checkbox = row.querySelector('input[type="checkbox"][name="termMonths"]');
+      const amount = row.querySelector("[data-term-amount]");
+      return checkbox && checkbox.checked
+        ? {
+            months: checkbox.value,
+            amount: amount ? amount.value.trim() : "",
+          }
+        : null;
+    })
+    .filter(Boolean);
+}
+
+function setTermsInForm(partner) {
+  document.querySelectorAll("[data-term-row]").forEach((row) => {
+    const checkbox = row.querySelector('input[type="checkbox"][name="termMonths"]');
+    const amount = row.querySelector("[data-term-amount]");
+    if (checkbox) checkbox.checked = false;
+    if (amount) amount.value = "";
+  });
+
+  const terms = Array.isArray(partner.terms) && partner.terms.length
+    ? partner.terms
+    : partner.termMonths && partner.termAmount
+      ? [{ months: partner.termMonths, amount: partner.termAmount }]
+      : [];
+
+  terms.forEach((term) => {
+    const row = document.querySelector(`[data-term-row="${term.months}"]`);
+    if (!row) return;
+    const checkbox = row.querySelector('input[type="checkbox"][name="termMonths"]');
+    const amount = row.querySelector("[data-term-amount]");
+    if (checkbox) checkbox.checked = true;
+    if (amount) amount.value = term.amount || "";
+  });
+}
+
 function fillForm(partner) {
   $("#partnerId").value = partner.id;
   $("#partnerType").value = partner.type;
@@ -477,10 +555,7 @@ function fillForm(partner) {
   $("#partnerStudio").value = partner.studio;
   $("#closedBy").value = partner.closedBy;
   $("#lastContact").value = partner.lastContact;
-  const term = partner.termMonths || "12";
-  const termInput = document.querySelector(`input[name="termMonths"][value="${term}"]`);
-  if (termInput) termInput.checked = true;
-  if ($("#termAmount")) $("#termAmount").value = partner.termAmount || "";
+  setTermsInForm(partner);
   if ($("#hasTransponderFee")) $("#hasTransponderFee").checked = Boolean(partner.hasTransponderFee);
   if ($("#hasServiceFee")) $("#hasServiceFee").checked = Boolean(partner.hasServiceFee);
   $("#conditions").value = formatPartnerConditions(partner);
@@ -500,7 +575,12 @@ function handleFormSubmit(event) {
   }
 
   const id = $("#partnerId").value || `p-${Date.now()}`;
-  const selectedTerm = document.querySelector('input[name="termMonths"]:checked');
+  const terms = getSelectedTermsFromForm();
+  if (!terms.length || terms.some((term) => !term.amount)) {
+    showToast("Bitte wähle mindestens eine Laufzeit aus und trage den passenden Betrag ein.", "error");
+    return;
+  }
+
   const partner = {
     id,
     type: $("#partnerType").value,
@@ -511,8 +591,9 @@ function handleFormSubmit(event) {
     studio: $("#partnerStudio").value,
     closedBy: $("#closedBy").value.trim(),
     lastContact: $("#lastContact").value,
-    termMonths: selectedTerm ? selectedTerm.value : "12",
-    termAmount: $("#termAmount") ? $("#termAmount").value.trim() : "",
+    terms,
+    termMonths: "",
+    termAmount: "",
     hasTransponderFee: $("#hasTransponderFee") ? $("#hasTransponderFee").checked : false,
     hasServiceFee: $("#hasServiceFee") ? $("#hasServiceFee").checked : false,
     conditions: "",
@@ -525,7 +606,7 @@ function handleFormSubmit(event) {
   if (existing >= 0) state.partners[existing] = partner;
   else state.partners.unshift(partner);
   savePartners();
-  resetForm();
+  closePartnerForm();
   render();
   showToast(`${partner.name} wurde gespeichert.`);
 }
@@ -535,8 +616,12 @@ function resetForm() {
   els.partnerForm.reset();
   $("#partnerId").value = "";
   $("#lastContact").value = new Date().toISOString().slice(0, 10);
-  if ($("#term12")) $("#term12").checked = true;
-  if ($("#termAmount")) $("#termAmount").value = "";
+  document.querySelectorAll("[data-term-row]").forEach((row) => {
+    const checkbox = row.querySelector('input[type="checkbox"][name="termMonths"]');
+    const amount = row.querySelector("[data-term-amount]");
+    if (checkbox) checkbox.checked = false;
+    if (amount) amount.value = "";
+  });
   if ($("#hasTransponderFee")) $("#hasTransponderFee").checked = false;
   if ($("#hasServiceFee")) $("#hasServiceFee").checked = false;
   els.formError.hidden = true;
@@ -545,7 +630,7 @@ function resetForm() {
 function renderAdminVisibility() {
   const adminPage = state.page === "verwaltung";
   els.overviewSections.hidden = state.page !== "uebersicht";
-  els.adminPanel.hidden = !adminPage;
+  els.adminPanel.hidden = !adminPage || !state.formOpen;
   els.partnerForm.querySelectorAll("input,select,textarea,button").forEach((field) => {
     field.disabled = !isAdmin();
   });
@@ -780,7 +865,7 @@ function bindEvents() {
     localStorage.setItem("tsf-role", state.role);
     render();
   });
-  els.pagePrimaryAction.addEventListener("click", () => window.location.href = "verwaltung.html");
+  els.pagePrimaryAction.addEventListener("click", () => openPartnerForm());
   [els.partnerSearch, els.globalSearch].forEach((input) => {
     input.addEventListener("input", (event) => {
       state.query = event.target.value;
@@ -803,16 +888,22 @@ function bindEvents() {
     render();
   });
   els.partnerForm.addEventListener("submit", handleFormSubmit);
-  els.cancelEdit.addEventListener("click", resetForm);
+  els.cancelEdit.addEventListener("click", closePartnerForm);
   els.closeDrawer.addEventListener("click", closeDrawer);
   els.detailBackdrop.addEventListener("click", closeDrawer);
+  els.adminPanel.addEventListener("click", (event) => {
+    if (event.target === els.adminPanel) closePartnerForm();
+  });
   document.querySelectorAll("[data-quick]").forEach((button) => {
     button.addEventListener("click", () => {
       window.location.href = button.dataset.quick === "firma" ? "firmenfitness.html" : button.dataset.quick === "verein" ? "vereinsfitness.html" : "verwaltung.html";
     });
   });
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeDrawer();
+    if (event.key === "Escape") {
+      closeDrawer();
+      if (state.formOpen) closePartnerForm();
+    }
   });
 }
 
@@ -821,6 +912,10 @@ resetForm();
 const editId = new URLSearchParams(window.location.search).get("edit");
 if (editId && state.page === "verwaltung") {
   const partner = state.partners.find((item) => item.id === editId);
-  if (partner) fillForm(partner);
+  if (partner) state.formOpen = true;
 }
 render();
+if (editId && state.page === "verwaltung") {
+  const partner = state.partners.find((item) => item.id === editId);
+  if (partner) openPartnerForm(partner);
+}
