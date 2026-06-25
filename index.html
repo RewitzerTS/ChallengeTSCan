@@ -18,83 +18,21 @@
         <div class="brand-fallback" aria-hidden="true"><strong>TOP SPORTS</strong><span>FITNESS</span></div>
       </div>
       <nav class="nav-list" id="desktopNav"></nav>
-      <section class="role-card" aria-label="Nutzerbereich">
-        <span>Angemeldet als</span>
-        <strong id="currentRoleLabel">Mitarbeiter</strong>
-        <button class="btn btn-secondary" id="roleToggle" type="button">Admin-Modus</button>
-      </section>
+      <section class="role-card" aria-label="Nutzerbereich"><span>Angemeldet als</span><strong id="currentRoleLabel">Mitarbeiter</strong><button class="btn btn-secondary" id="roleToggle" type="button">Admin-Modus</button></section>
     </aside>
-
     <div class="main-panel">
-      <header class="topbar">
-        <div class="mobile-brand"><img src="https://cdn.prod.website-files.com/6399b5dbb6020e1a3d81ce8d/6399c9a6b6439fd0327dcf5e_Vector%2038.svg" alt="" /><strong>Partnerverwaltung</strong></div>
-        <div class="breadcrumb"><span>Top Sports</span><span>/</span><strong id="breadcrumbPage">Übersicht</strong></div>
-        <label class="top-search" for="globalSearch"><span>⌕</span><input id="globalSearch" type="search" placeholder="Partner suchen" autocomplete="off" /></label>
-      </header>
-
+      <header class="topbar"><div class="mobile-brand"><img src="https://cdn.prod.website-files.com/6399b5dbb6020e1a3d81ce8d/6399c9a6b6439fd0327dcf5e_Vector%2038.svg" alt="" /><strong>Partnerverwaltung</strong></div><div class="breadcrumb"><span>Top Sports</span><span>/</span><strong id="breadcrumbPage">Übersicht</strong></div><label class="top-search" for="globalSearch"><span>⌕</span><input id="globalSearch" type="search" placeholder="Partner suchen" autocomplete="off" /></label></header>
       <main id="main-content" class="content" tabindex="-1">
-        <section class="page-header">
-          <div>
-            <p class="eyebrow" id="pageEyebrow">Partnerdatenbank</p>
-            <h1 id="pageTitle">Kooperationspartner im Überblick</h1>
-            <p id="pageDescription">Suche Firmen- und Vereinsfitnesspartner, prüfe Konditionen und sieh aktuelle Ansprechpartner auf einen Blick.</p>
-          </div>
-          <button class="btn btn-primary" id="pagePrimaryAction" type="button">+ Partner anlegen</button>
-        </section>
-
+        <section class="page-header"><div><p class="eyebrow" id="pageEyebrow">Partnerdatenbank</p><h1 id="pageTitle">Kooperationspartner im Überblick</h1><p id="pageDescription">Suche Firmen- und Vereinsfitnesspartner, prüfe Konditionen und sieh aktuelle Ansprechpartner auf einen Blick.</p></div><button class="btn btn-primary" id="pagePrimaryAction" type="button">+ Partner anlegen</button></section>
         <section class="kpi-grid" id="kpiGrid" aria-label="Kennzahlen"></section>
-
-        <section class="filters-card" aria-label="Suche und Filter">
-          <label class="search-field" for="partnerSearch"><span>⌕</span><input id="partnerSearch" type="search" placeholder="z. B. Bosch, VfL, Ansprechpartner" /></label>
-          <div class="chip-group" aria-label="Partnerart filtern">
-            <button class="chip is-active" type="button" data-filter="alle">Alle</button>
-            <button class="chip" type="button" data-filter="firma">Firmenfitness</button>
-            <button class="chip" type="button" data-filter="verein">Vereinsfitness</button>
-          </div>
-          <select id="studioFilter" aria-label="Studio filtern">
-            <option value="alle">Alle Studios</option>
-            <option>Echterdingen</option><option>Reutlingen</option><option>Leinfelden</option><option>Kornwestheim</option><option>Nürtingen</option><option>Degerloch</option>
-          </select>
-        </section>
-
-        <section class="dashboard-grid" id="overviewSections">
-          <article class="card"><div class="card-header"><div><h2>Aktuelle Aufgaben</h2><p>Kooperationen mit Handlungsbedarf.</p></div><span class="badge badge-open">3 offen</span></div><div class="task-list" id="taskList"></div></article>
-          <article class="card"><div class="card-header"><div><h2>Schnellzugriff</h2><p>Häufig genutzte Verwaltungsaktionen.</p></div></div><div class="quick-actions"><button data-quick="firma">Firmenpartner prüfen</button><button data-quick="verein">Vereinspartner prüfen</button><button data-quick="verwaltung">Datensatz verwalten</button></div></article>
-        </section>
-
-        <section class="card list-card" aria-labelledby="partnerListTitle">
-          <div class="card-header list-header"><div><h2 id="partnerListTitle">Partnerliste</h2><p id="resultCount">0 Einträge</p></div><button class="btn btn-secondary" id="resetFilters" type="button">Filter zurücksetzen</button></div>
-          <div class="table-wrap"><table><thead><tr><th>Partner</th><th>Art</th><th>Ansprechpartner</th><th>Konditionen</th><th>Letzter Kontakt</th><th>Status</th><th>Aktion</th></tr></thead><tbody id="partnerTableBody"></tbody></table></div>
-          <div class="mobile-list" id="partnerMobileList"></div>
-          <div class="empty-state" id="emptyState" hidden><h3>Keine Partner gefunden</h3><p>Prüfe Suchbegriff oder Filter. Neue Kooperationen können in der Verwaltung angelegt werden.</p><button class="btn btn-secondary" id="emptyReset" type="button">Filter zurücksetzen</button></div>
-        </section>
-
-        <section class="admin-layout" id="adminPanel" hidden>
-          <article class="card"><div class="card-header"><div><h2>Partner anlegen</h2><p>Neue Firmen- oder Vereinskooperation erfassen.</p></div></div>
-            <form id="partnerForm" class="partner-form">
-              <input type="hidden" id="partnerId" />
-              <div class="form-grid">
-                <label><span>Partnerart</span><select id="partnerType" required><option value="firma">Firmenfitness</option><option value="verein">Vereinsfitness</option></select></label>
-                <label><span>Firma oder Verein</span><input id="partnerName" required placeholder="z. B. Bosch GmbH" /></label>
-                <label><span>Ansprechpartner</span><input id="contactName" required placeholder="Vor- und Nachname" /></label>
-                <label><span>Telefon</span><input id="contactPhone" required type="tel" placeholder="+49 711 000000" /></label>
-                <label><span>E-Mail</span><input id="contactEmail" required type="email" placeholder="kontakt@unternehmen.de" /></label>
-                <label><span>Zuständiges Studio</span><select id="partnerStudio" required><option>Echterdingen</option><option>Reutlingen</option><option>Leinfelden</option><option>Kornwestheim</option><option>Nürtingen</option><option>Degerloch</option></select></label>
-                <label><span>Kooperation geschlossen von</span><input id="closedBy" required placeholder="z. B. Studioleitung Reutlingen" /></label>
-                <label><span>Letzter Kontakt</span><input id="lastContact" required type="date" /></label>
-                <label class="wide"><span>Konditionen</span><textarea id="conditions" required placeholder="Tarif, Rabatt, Laufzeit, Startgebühr"></textarea></label>
-                <label class="wide"><span>Besonderheiten</span><textarea id="notes" placeholder="Interne Hinweise, Nachweise, Sonderregeln"></textarea></label>
-              </div>
-              <p class="form-error" id="formError" role="alert" hidden>Bitte fülle alle Pflichtfelder korrekt aus.</p>
-              <div class="form-actions"><button class="btn btn-ghost" id="cancelEdit" type="button">Zurücksetzen</button><button class="btn btn-primary" type="submit">Speichern</button></div>
-            </form>
-          </article>
-          <article class="card"><div class="card-header"><div><h2>Admin-Hinweise</h2><p>Für Studioleitungen mit Schreibberechtigung.</p></div><span class="badge badge-neutral">Rollenbasiert</span></div><p class="muted">Mitarbeiter sehen Partnerdaten nur lesend. Clubleiter können Einträge anlegen, bearbeiten und löschen. In einer produktiven Version wird diese Rolle serverseitig geprüft.</p></article>
-        </section>
+        <section class="filters-card" aria-label="Suche und Filter"><label class="search-field" for="partnerSearch"><span>⌕</span><input id="partnerSearch" type="search" placeholder="z. B. Bosch, VfL, Ansprechpartner" /></label><div class="chip-group" aria-label="Partnerart filtern"><button class="chip is-active" type="button" data-filter="alle">Alle</button><button class="chip" type="button" data-filter="firma">Firmenfitness</button><button class="chip" type="button" data-filter="verein">Vereinsfitness</button></div><select id="studioFilter" aria-label="Studio filtern"><option value="alle">Alle Studios</option><option>Echterdingen</option><option>Reutlingen</option><option>Leinfelden</option><option>Kornwestheim</option><option>Nürtingen</option><option>Degerloch</option></select></section>
+        <section class="dashboard-grid" id="overviewSections"><article class="card"><div class="card-header"><div><h2>Schnellzugriff</h2><p>Häufig genutzte Verwaltungsaktionen.</p></div></div><div class="quick-actions"><button data-quick="firma">Firmenpartner prüfen</button><button data-quick="verein">Vereinspartner prüfen</button><button data-quick="verwaltung">Datensatz verwalten</button></div></article></section>
+        <div id="taskList" hidden></div>
+        <section class="card list-card" aria-labelledby="partnerListTitle"><div class="card-header list-header"><div><h2 id="partnerListTitle">Partnerliste</h2><p id="resultCount">0 Einträge</p></div><button class="btn btn-secondary" id="resetFilters" type="button">Filter zurücksetzen</button></div><div class="table-wrap"><table><thead><tr><th>Partner</th><th>Art</th><th>Ansprechpartner</th><th>Konditionen</th><th>Letzter Kontakt</th><th>Status</th><th>Aktion</th></tr></thead><tbody id="partnerTableBody"></tbody></table></div><div class="mobile-list" id="partnerMobileList"></div><div class="empty-state" id="emptyState" hidden><h3>Keine Partner gefunden</h3><p>Prüfe Suchbegriff oder Filter. Neue Kooperationen können in der Verwaltung angelegt werden.</p><button class="btn btn-secondary" id="emptyReset" type="button">Filter zurücksetzen</button></div></section>
+        <section class="admin-layout" id="adminPanel" hidden><article class="card"><div class="card-header"><div><h2>Partner anlegen</h2><p>Neue Firmen- oder Vereinskooperation erfassen.</p></div></div><form id="partnerForm" class="partner-form"><input type="hidden" id="partnerId" /><div class="form-grid"><label><span>Partnerart</span><select id="partnerType" required><option value="firma">Firmenfitness</option><option value="verein">Vereinsfitness</option></select></label><label><span>Firma oder Verein</span><input id="partnerName" required placeholder="z. B. Bosch GmbH" /></label><label><span>Ansprechpartner</span><input id="contactName" required placeholder="Vor- und Nachname" /></label><label><span>Telefon</span><input id="contactPhone" required type="tel" placeholder="+49 711 000000" /></label><label><span>E-Mail</span><input id="contactEmail" required type="email" placeholder="kontakt@unternehmen.de" /></label><label><span>Zuständiges Studio</span><select id="partnerStudio" required><option>Echterdingen</option><option>Reutlingen</option><option>Leinfelden</option><option>Kornwestheim</option><option>Nürtingen</option><option>Degerloch</option></select></label><label><span>Kooperation geschlossen von</span><input id="closedBy" required placeholder="z. B. Studioleitung Reutlingen" /></label><label><span>Letzter Kontakt</span><input id="lastContact" required type="date" /></label><label class="wide"><span>Konditionen</span><textarea id="conditions" required placeholder="Tarif, Rabatt, Laufzeit, Startgebühr"></textarea></label><label class="wide"><span>Besonderheiten</span><textarea id="notes" placeholder="Interne Hinweise, Nachweise, Sonderregeln"></textarea></label></div><p class="form-error" id="formError" role="alert" hidden>Bitte fülle alle Pflichtfelder korrekt aus.</p><div class="form-actions"><button class="btn btn-ghost" id="cancelEdit" type="button">Zurücksetzen</button><button class="btn btn-primary" type="submit">Speichern</button></div></form></article><article class="card"><div class="card-header"><div><h2>Admin-Hinweise</h2><p>Für Studioleitungen mit Schreibberechtigung.</p></div><span class="badge badge-neutral">Rollenbasiert</span></div><p class="muted">Mitarbeiter sehen Partnerdaten nur lesend. Clubleiter können Einträge anlegen, bearbeiten und löschen. In einer produktiven Version wird diese Rolle serverseitig geprüft.</p></article></section>
       </main>
     </div>
   </div>
-
   <nav class="bottom-nav" id="mobileNav" aria-label="Mobile Navigation"></nav>
   <div class="drawer-backdrop" id="detailBackdrop" hidden></div>
   <aside class="drawer" id="detailDrawer" aria-labelledby="drawerTitle" aria-hidden="true"><div class="drawer-header"><div><p class="eyebrow" id="drawerType">Partner</p><h2 id="drawerTitle">Details</h2></div><button class="icon-btn" id="closeDrawer" type="button" aria-label="Details schließen">×</button></div><div class="drawer-body" id="drawerBody"></div></aside>
