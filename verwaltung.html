@@ -50,11 +50,43 @@
         gap: 14px;
       }
 
+      #adminPanel {
+        position: fixed;
+        inset: 0;
+        z-index: 34;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(0, 0, 0, 0.72);
+      }
+
+      #adminPanel[hidden] {
+        display: none;
+      }
+
+      #adminPanel > .card {
+        width: min(100%, 760px);
+        max-height: min(860px, calc(100vh - 48px));
+        overflow: auto;
+        border-radius: 18px;
+      }
+
+      body.modal-open {
+        overflow: hidden;
+      }
+
       .term-options,
       .fee-options {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
         gap: 10px;
+      }
+
+      .term-rate-row {
+        display: grid;
+        grid-template-columns: minmax(150px, 180px) minmax(160px, 1fr);
+        gap: 12px;
+        align-items: end;
       }
 
       .choice-option {
@@ -84,13 +116,33 @@
         color: var(--text, var(--color-text));
       }
 
-      .amount-field {
-        max-width: 320px;
+      .term-amount-field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .term-amount-field span {
+        color: var(--text, var(--color-text));
+        font-size: 12px;
+        font-weight: 800;
       }
 
       @media (max-width: 760px) {
         .mobile-brand {
           min-width: 0;
+        }
+
+        #adminPanel {
+          align-items: stretch;
+          padding: 16px;
+        }
+
+        #adminPanel > .card {
+          max-height: calc(100vh - 32px);
+        }
+
+        .term-rate-row {
+          grid-template-columns: 1fr;
         }
       }
     </style>
@@ -205,11 +257,11 @@
             </div>
           </section>
 
-          <section class="admin-layout" id="adminPanel" hidden>
+          <section class="admin-layout" id="adminPanel" hidden role="dialog" aria-modal="true" aria-labelledby="partnerFormTitle">
             <article class="card">
               <div class="card-header">
                 <div>
-                  <h2>Partner anlegen</h2>
+                  <h2 id="partnerFormTitle">Partner anlegen</h2>
                   <p>Neue Firmen- oder Vereinskooperation erfassen.</p>
                 </div>
               </div>
@@ -226,12 +278,20 @@
                   <label><span>Letzter Kontakt</span><input id="lastContact" required type="date" /></label>
                   <fieldset class="condition-editor wide">
                     <legend>Konditionen</legend>
-                    <div class="term-options" role="radiogroup" aria-label="Laufzeit auswählen">
-                      <label class="choice-option"><input id="term1" name="termMonths" type="radio" value="1" required /><span>1 Monat</span></label>
-                      <label class="choice-option"><input id="term12" name="termMonths" type="radio" value="12" checked /><span>12 Monate</span></label>
-                      <label class="choice-option"><input id="term24" name="termMonths" type="radio" value="24" /><span>24 Monate</span></label>
+                    <div class="term-options" aria-label="Laufzeiten auswählen">
+                      <div class="term-rate-row" data-term-row="1">
+                        <label class="choice-option"><input id="term1" name="termMonths" type="checkbox" value="1" /><span>1 Monat</span></label>
+                        <label class="term-amount-field" for="termAmount1"><span>Betrag</span><input id="termAmount1" data-term-amount="1" inputmode="decimal" placeholder="z. B. 39,00" /></label>
+                      </div>
+                      <div class="term-rate-row" data-term-row="12">
+                        <label class="choice-option"><input id="term12" name="termMonths" type="checkbox" value="12" /><span>12 Monate</span></label>
+                        <label class="term-amount-field" for="termAmount12"><span>Betrag</span><input id="termAmount12" data-term-amount="12" inputmode="decimal" placeholder="z. B. 34,90" /></label>
+                      </div>
+                      <div class="term-rate-row" data-term-row="24">
+                        <label class="choice-option"><input id="term24" name="termMonths" type="checkbox" value="24" /><span>24 Monate</span></label>
+                        <label class="term-amount-field" for="termAmount24"><span>Betrag</span><input id="termAmount24" data-term-amount="24" inputmode="decimal" placeholder="z. B. 29,90" /></label>
+                      </div>
                     </div>
-                    <label class="amount-field" for="termAmount"><span>Betrag für diese Laufzeit</span><input id="termAmount" required inputmode="decimal" placeholder="z. B. 39,00" /></label>
                     <div class="fee-options">
                       <label class="choice-option"><input id="hasTransponderFee" type="checkbox" /><span>Transponder einmalig 29,90 €</span></label>
                       <label class="choice-option"><input id="hasServiceFee" type="checkbox" /><span>Servicepauschale halbjährlich 29,90 €</span></label>
@@ -242,7 +302,7 @@
                 </div>
                 <p class="form-error" id="formError" role="alert" hidden>Bitte fülle alle Pflichtfelder korrekt aus.</p>
                 <div class="form-actions">
-                  <button class="btn btn-ghost" id="cancelEdit" type="button">Zurücksetzen</button>
+                  <button class="btn btn-ghost" id="cancelEdit" type="button">Abbrechen</button>
                   <button class="btn btn-primary" type="submit">Speichern</button>
                 </div>
               </form>
