@@ -12,6 +12,26 @@
     />
     <link rel="stylesheet" href="styles.css" />
     <style>
+      .brand__logo {
+        max-width: 176px;
+        max-height: 40px;
+        object-fit: contain;
+      }
+
+      .mobile-brand {
+        min-width: 184px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 800;
+      }
+
+      .mobile-brand__logo {
+        width: 96px;
+        height: 28px;
+        object-fit: contain;
+      }
+
       .partner-form fieldset {
         margin: 0;
         padding: 0;
@@ -67,6 +87,12 @@
       .amount-field {
         max-width: 320px;
       }
+
+      @media (max-width: 760px) {
+        .mobile-brand {
+          min-width: 0;
+        }
+      }
     </style>
   </head>
   <body>
@@ -75,6 +101,7 @@
       <aside class="sidebar" aria-label="Hauptnavigation">
         <div class="brand">
           <img
+            class="brand__logo"
             src="https://cdn.prod.website-files.com/6399b5dbb6020e1a3d81ce8d/6399c9a6b6439fd0327dcf5e_Vector%2038.svg"
             alt="Top Sports Fitness"
           />
@@ -95,6 +122,7 @@
         <header class="topbar">
           <div class="mobile-brand">
             <img
+              class="mobile-brand__logo"
               src="https://cdn.prod.website-files.com/6399b5dbb6020e1a3d81ce8d/6399c9a6b6439fd0327dcf5e_Vector%2038.svg"
               alt=""
             />
