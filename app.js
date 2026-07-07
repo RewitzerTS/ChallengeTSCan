@@ -113,6 +113,52 @@ const state = {
 };
 
 const $ = (selector) => document.querySelector(selector);
+
+function ensurePartnerFormModal() {
+  if ($("#adminPanel")) return;
+
+  const modal = document.createElement("section");
+  modal.className = "admin-layout";
+  modal.id = "adminPanel";
+  modal.hidden = true;
+  modal.setAttribute("role", "dialog");
+  modal.setAttribute("aria-modal", "true");
+  modal.setAttribute("aria-labelledby", "partnerFormTitle");
+  modal.innerHTML = `
+    <article class="card">
+      <div class="card-header">
+        <div>
+          <h2 id="partnerFormTitle">Partner anlegen</h2>
+          <p>Neue Firmen- oder Vereinskooperation erfassen.</p>
+        </div>
+      </div>
+      <form id="partnerForm" class="partner-form">
+        <input type="hidden" id="partnerId" />
+        <div class="form-grid">
+          <label><span>Partnerart</span><select id="partnerType" required><option value="firma">Firmenfitness</option><option value="verein">Vereinsfitness</option></select></label>
+          <label><span>Firma oder Verein</span><input id="partnerName" required placeholder="z. B. Bosch GmbH" /></label>
+          <label><span>Ansprechpartner</span><input id="contactName" required placeholder="Vor- und Nachname" /></label>
+          <label><span>Telefon</span><input id="contactPhone" required type="tel" placeholder="+49 711 000000" /></label>
+          <label><span>E-Mail</span><input id="contactEmail" required type="email" placeholder="kontakt@unternehmen.de" /></label>
+          <label><span>Zuständiges Studio</span><select id="partnerStudio" required><option>Echterdingen</option><option>Reutlingen</option><option>Leinfelden</option><option>Kornwestheim</option><option>Nürtingen</option><option>Degerloch</option></select></label>
+          <label><span>Kooperation geschlossen von</span><input id="closedBy" required placeholder="z. B. Studioleitung Reutlingen" /></label>
+          <label><span>Letzter Kontakt</span><input id="lastContact" required type="date" /></label>
+          <label class="wide"><span>Konditionen</span><textarea id="conditions" required placeholder="z. B. Firmenfitness 1 Monat 39 EUR"></textarea></label>
+          <label class="wide"><span>Besonderheiten</span><textarea id="notes" placeholder="Interne Hinweise, Nachweise, Sonderregeln"></textarea></label>
+        </div>
+        <p class="form-error" id="formError" role="alert" hidden>Bitte fülle alle Pflichtfelder korrekt aus.</p>
+        <div class="form-actions">
+          <button class="btn btn-ghost" id="cancelEdit" type="button">Zurücksetzen</button>
+          <button class="btn btn-primary" type="submit">Speichern</button>
+        </div>
+      </form>
+    </article>
+  `;
+  document.querySelector("main.content")?.append(modal);
+}
+
+ensurePartnerFormModal();
+
 const els = {
   desktopNav: $("#desktopNav"),
   mobileNav: $("#mobileNav"),
@@ -665,7 +711,6 @@ function resetForm() {
 }
 
 function renderAdminVisibility() {
-  const adminPage = state.page === "verwaltung";
   els.adminPanel.hidden = !state.formOpen;
   els.partnerForm.querySelectorAll("input,select,textarea,button").forEach((field) => {
     field.disabled = false;
