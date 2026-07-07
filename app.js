@@ -281,7 +281,7 @@ function renderHeader() {
   const configs = {
     uebersicht: [
       "Partnerdatenbank",
-      "Kooperationspartner im Überblick",
+      "Firmenfitness-/Vereinsfitnesspartner",
       "Suche nach Firmen und Vereinen und prüfe die freigegebenen Konditionen.",
       "",
     ],
