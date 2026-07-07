@@ -1,4 +1,4 @@
-const STORAGE_KEY = "tsf-partnerverwaltung-v2";
+const STORAGE_KEY = "tsf-partnerverwaltung-v3";
 
 const pageByFile = {
   "index.html": "uebersicht",
@@ -222,7 +222,7 @@ function formatDate(value) {
 function statusBadge(status) {
   const map = {
     aktiv: ["badge-active", "Aktiv"],
-    offen: ["badge-open", "Prüfen"],
+    offen: ["badge-open", "Ausstehend"],
     kritisch: ["badge-critical", "Kritisch"],
   };
   const [className, label] = map[status] || ["badge-neutral", "Neutral"];
@@ -288,13 +288,13 @@ function renderHeader() {
     firmenfitness: [
       "Firmenfitness",
       "Firmenpartner",
-      "Alle Firmenkooperationen mit den freigegebenen Konditionen.",
+      "Mitarbeiter können Firmenpartner vorschlagen. Sichtbar werden sie nach Freigabe durch Clubleitung oder Admin.",
       "Firmenpartner anlegen",
     ],
     vereinsfitness: [
       "Vereinsfitness",
       "Vereinspartner",
-      "Alle Vereinspartner mit den freigegebenen Konditionen.",
+      "Mitarbeiter können Vereinspartner vorschlagen. Sichtbar werden sie nach Freigabe durch Clubleitung oder Admin.",
       "Vereinspartner anlegen",
     ],
     verwaltung: [
@@ -519,11 +519,33 @@ function openPartnerForm(partner = null) {
   document.body.classList.add("modal-open");
   if (partner) fillForm(partner);
   else resetForm();
+  updatePartnerFormCopy(partner);
   if (!partner && (state.page === "firmenfitness" || state.page === "vereinsfitness")) {
     $("#partnerType").value = pageTypeFilter();
     $("#partnerType").disabled = true;
   }
   setTimeout(() => $("#partnerName")?.focus(), 0);
+}
+
+function updatePartnerFormCopy(partner) {
+  const title = $("#partnerFormTitle");
+  const description = $("#partnerFormDescription");
+  const submitButton = els.partnerForm?.querySelector('.form-actions .btn-primary');
+  if (!title || !description || !submitButton) return;
+
+  if (partner) {
+    title.textContent = "Partner bearbeiten";
+    description.textContent = "Bestehende Kooperation aktualisieren.";
+    submitButton.textContent = "Speichern";
+    return;
+  }
+
+  const label = pageTypeFilter() === "firma" ? "Firmenpartner" : pageTypeFilter() === "verein" ? "Vereinspartner" : "Partner";
+  title.textContent = `${label} anlegen`;
+  description.textContent = isAdmin()
+    ? "Neue Kooperation erfassen und direkt freigeben."
+    : "Neue Kooperation erfassen. Sie wird erst nach Freigabe für alle sichtbar.";
+  submitButton.textContent = isAdmin() ? "Speichern" : "Zur Freigabe einreichen";
 }
 
 function closePartnerForm() {
