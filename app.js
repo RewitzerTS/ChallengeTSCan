@@ -127,7 +127,6 @@ const els = {
   kpiGrid: $("#kpiGrid"),
   partnerSearch: $("#partnerSearch"),
   studioFilter: $("#studioFilter"),
-  overviewSections: $("#overviewSections"),
   partnerTableBody: $("#partnerTableBody"),
   partnerMobileList: $("#partnerMobileList"),
   resultCount: $("#resultCount"),
@@ -222,7 +221,7 @@ function formatDate(value) {
 function statusBadge(status) {
   const map = {
     aktiv: ["badge-active", "Aktiv"],
-    offen: ["badge-open", "Prüfen"],
+    offen: ["badge-open", "Prüfung"],
     kritisch: ["badge-critical", "Kritisch"],
   };
   const [className, label] = map[status] || ["badge-neutral", "Neutral"];
@@ -242,6 +241,7 @@ function filteredPartners() {
   return state.partners.filter((partner) => {
     const matchesType = filter === "alle" || partner.type === filter;
     const matchesStudio = state.studio === "alle" || partner.studio === state.studio;
+    const isApproved = partner.status !== "offen";
     const conditionText = formatPartnerConditions(partner);
     const publicText = [partner.name, typeLabel(partner.type), conditionText].join(" ").toLowerCase();
     const adminText = [
@@ -256,7 +256,7 @@ function filteredPartners() {
       partner.studio,
     ].join(" ").toLowerCase();
 
-    return matchesType && matchesStudio && (!query || (isAdmin() ? adminText : publicText).includes(query));
+    return matchesType && matchesStudio && (isAdmin() || isApproved) && (!query || (isAdmin() ? adminText : publicText).includes(query));
   });
 }
 
@@ -311,15 +311,16 @@ function renderHeader() {
   els.breadcrumbPage.textContent = navItems.find((item) => item.id === state.page).label;
   els.currentRoleLabel.textContent = isAdmin() ? "Clubleiter" : "Mitarbeiter";
   els.roleToggle.textContent = isAdmin() ? "Lesemodus" : "Admin-Modus";
-  els.pagePrimaryAction.hidden = !isAdmin() || state.page !== "verwaltung";
+  els.pagePrimaryAction.hidden = state.page === "uebersicht" || (state.page === "verwaltung" && !isAdmin());
   els.pagePrimaryAction.textContent = `+ ${config[3] || "Partner anlegen"}`;
   document.body.dataset.page = state.page;
   document.body.dataset.role = state.role;
 }
 
 function renderKpis() {
-  const firms = state.partners.filter((partner) => partner.type === "firma").length;
-  const clubs = state.partners.filter((partner) => partner.type === "verein").length;
+  const visiblePartners = state.partners.filter((partner) => isAdmin() || partner.status !== "offen");
+  const firms = visiblePartners.filter((partner) => partner.type === "firma").length;
+  const clubs = visiblePartners.filter((partner) => partner.type === "verein").length;
   const visible = filteredPartners().length;
   const items = [
     ["Firmenpartner", firms, "freigegebene Konditionen"],
@@ -356,13 +357,37 @@ function renderList() {
   els.partnerMobileList.innerHTML = partners.map(renderMobileCard).join("");
 
   document.querySelectorAll("[data-view]").forEach((button) => {
-    button.addEventListener("click", () => openDrawer(button.dataset.view));
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      openDrawer(button.dataset.view);
+    });
+  });
+  document.querySelectorAll("[data-row-view]").forEach((row) => {
+    row.addEventListener("click", () => openDrawer(row.dataset.rowView));
+    row.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openDrawer(row.dataset.rowView);
+      }
+    });
   });
   document.querySelectorAll("[data-edit]").forEach((button) => {
-    button.addEventListener("click", () => editPartner(button.dataset.edit));
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      editPartner(button.dataset.edit);
+    });
   });
   document.querySelectorAll("[data-delete]").forEach((button) => {
-    button.addEventListener("click", () => deletePartner(button.dataset.delete));
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      deletePartner(button.dataset.delete);
+    });
+  });
+  document.querySelectorAll("[data-approve]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      approvePartner(button.dataset.approve);
+    });
   });
 }
 
@@ -398,7 +423,7 @@ function renderTableRow(partner) {
     : "";
 
   return `
-    <tr>
+    <tr class="partner-row" data-row-view="${partner.id}" tabindex="0" aria-label="${partner.name} öffnen">
       <td><div class="partner-name"><strong>${partner.name}</strong><span>${isAdmin() ? partner.studio : typeLabel(partner.type)}</span></div></td>
       <td>${typeLabel(partner.type)}</td>
       <td>${conditionText}</td>
@@ -415,13 +440,13 @@ function renderMobileCard(partner) {
     : "";
 
   return `
-    <article class="mobile-card">
+    <article class="mobile-card partner-row" data-row-view="${partner.id}" tabindex="0" aria-label="${partner.name} öffnen">
       <div class="mobile-card-top">
         <div class="partner-name"><strong>${partner.name}</strong><span>${typeLabel(partner.type)}${isAdmin() ? ` · ${partner.studio}` : ""}</span></div>
         ${isAdmin() ? statusBadge(partner.status) : ""}
       </div>
       <div class="mobile-meta"><span>${conditionText}</span>${adminMeta}</div>
-      <div class="mobile-actions"><button class="btn btn-secondary" type="button" data-view="${partner.id}">Öffnen</button>${isAdmin() ? `<button class="btn btn-danger" type="button" data-delete="${partner.id}">Löschen</button>` : ""}</div>
+      <div class="mobile-actions"><button class="btn btn-secondary" type="button" data-view="${partner.id}">Öffnen</button>${isAdmin() ? `${partner.status === "offen" ? `<button class="btn btn-secondary" type="button" data-approve="${partner.id}">Freigeben</button>` : ""}<button class="btn btn-danger" type="button" data-delete="${partner.id}">Löschen</button>` : ""}</div>
     </article>
   `;
 }
@@ -429,6 +454,7 @@ function renderMobileCard(partner) {
 function adminActions(partner) {
   if (!isAdmin()) return "";
   return `
+    ${partner.status === "offen" ? `<button class="icon-btn" type="button" data-approve="${partner.id}" aria-label="${partner.name} freigeben">✓</button>` : ""}
     <button class="icon-btn" type="button" data-edit="${partner.id}" aria-label="${partner.name} bearbeiten">✎</button>
     <button class="icon-btn btn-danger" type="button" data-delete="${partner.id}" aria-label="${partner.name} löschen">×</button>
   `;
@@ -456,7 +482,10 @@ function openDrawer(id) {
   els.detailDrawer.setAttribute("aria-hidden", "false");
   els.closeDrawer.focus();
   els.drawerBody.querySelectorAll("[data-edit]").forEach((button) => {
-    button.addEventListener("click", () => editPartner(button.dataset.edit));
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      editPartner(button.dataset.edit);
+    });
   });
 }
 
@@ -480,6 +509,15 @@ function editPartner(id) {
   window.location.href = `verwaltung.html?edit=${encodeURIComponent(id)}`;
 }
 
+function approvePartner(id) {
+  const partner = state.partners.find((item) => item.id === id);
+  if (!partner || !isAdmin()) return;
+  partner.status = "aktiv";
+  savePartners();
+  render();
+  showToast(`${partner.name} wurde freigegeben.`);
+}
+
 function deletePartner(id) {
   const partner = state.partners.find((item) => item.id === id);
   if (!partner || !confirm(`${partner.name} wirklich löschen?`)) return;
@@ -490,7 +528,7 @@ function deletePartner(id) {
 }
 
 function openPartnerForm(partner = null) {
-  if (!isAdmin() || state.page !== "verwaltung") return;
+  if (state.page === "uebersicht") return;
   state.formOpen = true;
   els.adminPanel.hidden = false;
   document.body.classList.add("modal-open");
@@ -564,10 +602,6 @@ function fillForm(partner) {
 
 function handleFormSubmit(event) {
   event.preventDefault();
-  if (!isAdmin()) {
-    showToast("Nur Clubleiter können Partnerdaten speichern.", "error");
-    return;
-  }
   if (!els.partnerForm.checkValidity()) {
     els.formError.hidden = false;
     els.partnerForm.reportValidity();
@@ -575,8 +609,9 @@ function handleFormSubmit(event) {
   }
 
   const id = $("#partnerId").value || `p-${Date.now()}`;
+  const rawConditions = $("#conditions")?.value.trim() || "";
   const terms = getSelectedTermsFromForm();
-  if (!terms.length || terms.some((term) => !term.amount)) {
+  if (document.querySelectorAll("[data-term-row]").length && (!terms.length || terms.some((term) => !term.amount))) {
     showToast("Bitte wähle mindestens eine Laufzeit aus und trage den passenden Betrag ein.", "error");
     return;
   }
@@ -596,9 +631,9 @@ function handleFormSubmit(event) {
     termAmount: "",
     hasTransponderFee: $("#hasTransponderFee") ? $("#hasTransponderFee").checked : false,
     hasServiceFee: $("#hasServiceFee") ? $("#hasServiceFee").checked : false,
-    conditions: "",
+    conditions: rawConditions,
     notes: $("#notes").value.trim(),
-    status: "aktiv",
+    status: isAdmin() ? "aktiv" : "offen",
   };
   partner.conditions = formatPartnerConditions(partner);
 
@@ -608,13 +643,15 @@ function handleFormSubmit(event) {
   savePartners();
   closePartnerForm();
   render();
-  showToast(`${partner.name} wurde gespeichert.`);
+  showToast(isAdmin() ? `${partner.name} wurde gespeichert.` : `${partner.name} wurde zur Prüfung gespeichert.`);
 }
 
 function resetForm() {
   if (!els.partnerForm || !$("#partnerId")) return;
   els.partnerForm.reset();
   $("#partnerId").value = "";
+  if (state.page === "firmenfitness") $("#partnerType").value = "firma";
+  if (state.page === "vereinsfitness") $("#partnerType").value = "verein";
   $("#lastContact").value = new Date().toISOString().slice(0, 10);
   document.querySelectorAll("[data-term-row]").forEach((row) => {
     const checkbox = row.querySelector('input[type="checkbox"][name="termMonths"]');
@@ -629,10 +666,9 @@ function resetForm() {
 
 function renderAdminVisibility() {
   const adminPage = state.page === "verwaltung";
-  els.overviewSections.hidden = state.page !== "uebersicht";
-  els.adminPanel.hidden = !adminPage || !state.formOpen;
+  els.adminPanel.hidden = !state.formOpen;
   els.partnerForm.querySelectorAll("input,select,textarea,button").forEach((field) => {
-    field.disabled = !isAdmin();
+    field.disabled = false;
   });
 }
 
@@ -893,11 +929,6 @@ function bindEvents() {
   els.detailBackdrop.addEventListener("click", closeDrawer);
   els.adminPanel.addEventListener("click", (event) => {
     if (event.target === els.adminPanel) closePartnerForm();
-  });
-  document.querySelectorAll("[data-quick]").forEach((button) => {
-    button.addEventListener("click", () => {
-      window.location.href = button.dataset.quick === "firma" ? "firmenfitness.html" : button.dataset.quick === "verein" ? "vereinsfitness.html" : "verwaltung.html";
-    });
   });
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {

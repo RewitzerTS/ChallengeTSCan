@@ -111,22 +111,6 @@
             </select>
           </section>
 
-          <section class="dashboard-grid" id="overviewSections">
-            <article class="card">
-              <div class="card-header">
-                <div>
-                  <h2>Schnellzugriff</h2>
-                  <p>Direkt in den passenden Arbeitsbereich wechseln.</p>
-                </div>
-              </div>
-              <div class="quick-actions">
-                <button data-quick="firma">Firmenpartner prüfen</button>
-                <button data-quick="verein">Vereinspartner prüfen</button>
-                <button data-quick="verwaltung">Datensatz verwalten</button>
-              </div>
-            </article>
-          </section>
-
           <section class="card list-card" aria-labelledby="partnerListTitle">
             <div class="card-header list-header">
               <div>
@@ -149,11 +133,11 @@
             </div>
           </section>
 
-          <section class="admin-layout" id="adminPanel" hidden>
+          <section class="admin-layout" id="adminPanel" hidden role="dialog" aria-modal="true" aria-labelledby="partnerFormTitle">
             <article class="card">
               <div class="card-header">
                 <div>
-                  <h2>Partner anlegen</h2>
+                  <h2 id="partnerFormTitle">Partner anlegen</h2>
                   <p>Neue Firmen- oder Vereinskooperation erfassen.</p>
                 </div>
               </div>

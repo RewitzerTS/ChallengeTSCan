@@ -10,7 +10,7 @@ Das Logo wird aus der Top-Sports-Fitness-Website geladen. Falls die externe Quel
 
 ## 2. Seitenstruktur
 
-- **Übersicht**: Kennzahlen, aktuelle Aufgaben, Schnellzugriff und vollständige Partnerliste.
+- **Übersicht**: Kennzahlen und vollständige Partnerliste.
 - **Firmenfitness**: Gefilterte Suche und Übersicht aller Firmenpartner.
 - **Vereinsfitness**: Gefilterte Suche und Übersicht aller Vereinspartner.
 - **Verwaltung**: Admin-Formular zum Anlegen und Bearbeiten von Partnern plus Hinweise zur Rollenlogik.
