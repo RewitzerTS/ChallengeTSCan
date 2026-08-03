@@ -2,7 +2,7 @@ const AUTH_SESSION_KEY = "tsf-auth-session";
 const AUTH_USERS_KEY = "tsf-users-v1";
 
 const defaultUsers = [
-  { id: "u-employee", username: "mitarbeiter", password: "TopSports2026!", name: "Thekenmitarbeiter", role: "employee" },
+  { id: "u-employee", username: "theke", password: "TopSports2026!", name: "Theke", role: "employee" },
   { id: "u-manager", username: "clubleiter", password: "TopSports2026!", name: "Clubleitung", role: "clubManager" },
   { id: "u-admin", username: "admin", password: "TopSports2026!", name: "Administrator", role: "admin" },
 ];
@@ -10,7 +10,12 @@ const defaultUsers = [
 function readUsers() {
   try {
     const users = JSON.parse(localStorage.getItem(AUTH_USERS_KEY));
-    return Array.isArray(users) ? users : defaultUsers;
+    if (!Array.isArray(users)) return defaultUsers;
+    return users.map((user) =>
+      user.id === "u-employee" && user.username === "mitarbeiter"
+        ? { ...user, username: "theke", name: user.name === "Thekenmitarbeiter" ? "Theke" : user.name }
+        : user
+    );
   } catch {
     return defaultUsers;
   }
@@ -41,12 +46,12 @@ function requestedPage() {
   return /^(index|firmenfitness|vereinsfitness|verwaltung|benutzer)\.html$/.test(next) ? next : "firmenfitness.html";
 }
 
-function homeForRole(role) {
-  return role === "employee" ? "firmenfitness.html" : "index.html";
+function homeForRole() {
+  return "index.html";
 }
 
 function canAccessPage(role, page) {
-  if (role === "employee") return /^(firmenfitness|vereinsfitness)\.html$/.test(page);
+  if (role === "employee") return /^(index|firmenfitness|vereinsfitness)\.html$/.test(page);
   if (page === "benutzer.html") return role === "admin";
   return /^(index|firmenfitness|vereinsfitness|verwaltung)\.html$/.test(page);
 }

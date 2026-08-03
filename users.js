@@ -1,5 +1,5 @@
 const session = window.tsfAuth.readSession();
-const roleNames = { employee: "Mitarbeiter", clubManager: "Clubleiter", admin: "Admin" };
+const roleNames = { employee: "Theke", clubManager: "Clubleiter", admin: "Admin" };
 const panel = document.querySelector("#userPanel");
 const form = document.querySelector("#userForm");
 const error = document.querySelector("#userError");

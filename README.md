@@ -4,7 +4,7 @@ Interne Webapp zur Verwaltung und Suche von Firmenfitness- und Vereinsfitnesspar
 
 ## 1. Kurze Designbeschreibung
 
-Die Oberfläche nutzt eine dunkle Premium-Basis mit klarer weißer Typografie und gezielten roten Markenakzenten. Die App ist als effizientes internes Werkzeug für Mitarbeiter und Studioleitungen gestaltet: Sidebar auf Desktop, kompakte Bottom Navigation auf Mobile, ruhige Karten, klare Tabellen und ein fokussierter Detail-Drawer.
+Die Oberfläche nutzt eine dunkle Premium-Basis mit klarer weißer Typografie und gezielten roten Markenakzenten. Die App ist als effizientes internes Werkzeug für Thekenmitarbeiter und Studioleitungen gestaltet: Sidebar auf Desktop, kompakte Bottom Navigation auf Mobile, ruhige Karten, klare Tabellen und ein fokussierter Detail-Drawer.
 
 Das Logo wird aus der Top-Sports-Fitness-Website geladen. Falls die externe Quelle nicht verfügbar ist, bleibt ein definierter Markenbereich mit Text-Fallback sichtbar.
 
@@ -27,7 +27,8 @@ Das Logo wird aus der Top-Sports-Fitness-Website geladen. Falls die externe Quel
 - Admin-Formular mit validierten Pflichtfeldern
 - Detail-Drawer für Konditionen, Besonderheiten und Kontaktdaten
 - Toast Feedback für Speichern und Löschen
-- Rollenbasierte Anmeldung für Mitarbeiter, Clubleiter und Admin
+- Rollenbasierte Anmeldung für Theke, Clubleiter und Admin
+- Vorschlagsformular für neue Firmen und Vereine mit vorbereiteter E-Mail an das Firmenfitness-Team
 - Benutzerverwaltung ausschließlich für Admins
 
 ## 4. Design Tokens
@@ -81,7 +82,7 @@ Neue interne Webapps sollten dieselbe App Shell, dieselben CSS Tokens und diesel
 
 Vor dem Zugriff auf die Partnerverwaltung wird eine Anmeldeseite angezeigt. Für den Prototyp gelten folgende Zugangsdaten:
 
-- Mitarbeiter: `mitarbeiter` / `TopSports2026!` (Firmen- und Vereinsfitness nur ansehen)
+- Theke: `theke` / `TopSports2026!` (Partner ansehen und Firmen oder Vereine vorschlagen)
 - Clubleiter: `clubleiter` / `TopSports2026!` (Partner ansehen, anlegen und bearbeiten)
 - Admin: `admin` / `TopSports2026!` (zusätzlich Benutzer anlegen und entfernen)
 

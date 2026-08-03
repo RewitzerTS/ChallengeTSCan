@@ -16,3 +16,4 @@
   box-shadow: none;
 }
 .partner-form small{color:var(--muted);font-size:12px;font-weight:500}.contract-link{width:max-content;max-width:100%}
+.suggestion-card{margin-bottom:24px}.suggestion-card .card-header{margin-bottom:20px}.suggestion-hint{margin:14px 0 0;color:var(--muted);font-size:13px}#suggestedBy[readonly]{background:rgba(255,255,255,.04);color:var(--secondary);cursor:not-allowed}
