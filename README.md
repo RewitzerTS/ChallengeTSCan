@@ -74,3 +74,12 @@ Die App kann direkt über `index.html` im Browser geöffnet werden. Es ist kein 
 ## 7. Konsistente Umsetzung neuer Webapps
 
 Neue interne Webapps sollten dieselbe App Shell, dieselben CSS Tokens und dieselben Komponentenklassen verwenden. Pro Seite gilt: eine klare Hauptaufgabe, eine eindeutige Hauptaktion, ruhige dunkle Flächen, rote Akzente nur für wichtige Zustände und Aktionen, deutsche Microcopy und responsive Tabellenersatz-Karten auf Mobile.
+
+## 8. Anmeldung
+
+Vor dem Zugriff auf die Partnerverwaltung wird eine Anmeldeseite angezeigt. Für den Prototyp gelten folgende Zugangsdaten:
+
+- Benutzername: `mitarbeiter`
+- Passwort: `TopSports2026!`
+
+Die Anmeldung wird für maximal acht Stunden im aktuellen Browser-Tab gespeichert. Über **Abmelden** wird die Sitzung sofort beendet. Da diese Version weiterhin eine rein statische Frontend-App ist, stellt die clientseitige Prüfung keinen vollständigen Schutz für produktive oder personenbezogene Daten dar. Vor dem produktiven Einsatz müssen Anmeldung, Sitzungsprüfung und Autorisierung über ein Backend bzw. einen Identity Provider erfolgen.
