@@ -225,6 +225,22 @@ function formatPartnerConditions(partner) {
   return partner.conditions || "";
 }
 
+function cooperationContractUrl(value) {
+  if (!value) return "";
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.href : "";
+  } catch {
+    return "";
+  }
+}
+
+function escapeHtml(value) {
+  const element = document.createElement("span");
+  element.textContent = value;
+  return element.innerHTML;
+}
+
 function formatDate(value) {
   return new Intl.DateTimeFormat("de-DE", {
     day: "2-digit",
@@ -463,6 +479,7 @@ function openDrawer(id) {
       <div class="detail-section"><span>Ansprechpartner</span><strong>${partner.contactName}</strong><p>${partner.contactPhone}</p><p>${partner.contactEmail}</p></div>
       <div class="detail-section"><span>Besonderheiten</span><p>${partner.notes || "Keine Besonderheiten hinterlegt."}</p></div>
       <div class="detail-section"><span>Kooperation</span><p>Geschlossen von: ${partner.closedBy}</p><p>Zuständiges Studio: ${partner.studio}</p><p>Letzter Kontakt: ${formatDate(partner.lastContact)}</p></div>
+      <div class="detail-section"><span>Kooperationsvertrag</span>${cooperationContractUrl(partner.contractUrl) ? `<a class="btn btn-secondary contract-link" href="${escapeHtml(cooperationContractUrl(partner.contractUrl))}" target="_blank" rel="noopener noreferrer">Vertrag in OneDrive öffnen ↗</a>` : "<p>Noch kein Vertragslink hinterlegt.</p>"}</div>
       <button class="btn btn-secondary" type="button" data-edit="${partner.id}">Bearbeiten</button>
     `
     : "";
@@ -599,6 +616,7 @@ function fillForm(partner) {
   $("#partnerStudio").value = partner.studio;
   $("#closedBy").value = partner.closedBy;
   $("#lastContact").value = partner.lastContact;
+  $("#contractUrl").value = partner.contractUrl || "";
   setTermsInForm(partner);
   if ($("#hasTransponderFee")) $("#hasTransponderFee").checked = Boolean(partner.hasTransponderFee);
   if ($("#hasServiceFee")) $("#hasServiceFee").checked = Boolean(partner.hasServiceFee);
@@ -620,6 +638,13 @@ function handleFormSubmit(event) {
   }
 
   const id = $("#partnerId").value || `p-${Date.now()}`;
+  const contractUrlInput = $("#contractUrl").value.trim();
+  const contractUrl = cooperationContractUrl(contractUrlInput);
+  if (contractUrlInput && !contractUrl) {
+    showToast("Bitte gib einen gültigen HTTP- oder HTTPS-Link zum Kooperationsvertrag ein.", "error");
+    $("#contractUrl").focus();
+    return;
+  }
   const terms = getSelectedTermsFromForm();
   if (!terms.length || terms.some((term) => !term.amount)) {
     showToast("Bitte wähle mindestens eine Laufzeit aus und trage den passenden Betrag ein.", "error");
@@ -636,6 +661,7 @@ function handleFormSubmit(event) {
     studio: $("#partnerStudio").value,
     closedBy: $("#closedBy").value.trim(),
     lastContact: $("#lastContact").value,
+    contractUrl,
     terms,
     termMonths: "",
     termAmount: "",
@@ -701,6 +727,7 @@ function exportCurrentPartners() {
     "Letzter Kontakt",
     "Besonderheiten",
     "Kooperation geschlossen von",
+    "Kooperationsvertrag",
     "Status",
   ];
   const rows = filteredPartners().map((partner) => [
@@ -714,6 +741,7 @@ function exportCurrentPartners() {
     formatDate(partner.lastContact),
     partner.notes || "",
     partner.closedBy,
+    partner.contractUrl || "",
     partner.status,
   ]);
   const blob = createXlsxBlob(headers, rows);

@@ -14,6 +14,7 @@ Das Logo wird aus der Top-Sports-Fitness-Website geladen. Falls die externe Quel
 - **Firmenfitness**: Gefilterte Suche und Übersicht aller Firmenpartner.
 - **Vereinsfitness**: Gefilterte Suche und Übersicht aller Vereinspartner.
 - **Verwaltung**: Admin-Formular zum Anlegen und Bearbeiten von Partnern plus Hinweise zur Rollenlogik.
+- **Kooperationsverträge**: Clubleiter und Admins können je Partner einen OneDrive-Link hinterlegen und über die Partnerdetails öffnen.
 
 ## 3. Komponentenübersicht
 
@@ -84,4 +85,4 @@ Vor dem Zugriff auf die Partnerverwaltung wird eine Anmeldeseite angezeigt. Für
 - Clubleiter: `clubleiter` / `TopSports2026!` (Partner ansehen, anlegen und bearbeiten)
 - Admin: `admin` / `TopSports2026!` (zusätzlich Benutzer anlegen und entfernen)
 
-Die Anmeldung wird für maximal acht Stunden im aktuellen Browser-Tab gespeichert. Über **Abmelden** wird die Sitzung sofort beendet. Da diese Version weiterhin eine rein statische Frontend-App ist, stellt die clientseitige Prüfung keinen vollständigen Schutz für produktive oder personenbezogene Daten dar. Vor dem produktiven Einsatz müssen Anmeldung, Sitzungsprüfung und Autorisierung über ein Backend bzw. einen Identity Provider erfolgen.
+Die Anmeldung bleibt im Browser gespeichert, bis sie über **Abmelden** manuell beendet wird. Da diese Version weiterhin eine rein statische Frontend-App ist, stellt die clientseitige Prüfung keinen vollständigen Schutz für produktive oder personenbezogene Daten dar. Vor dem produktiven Einsatz müssen Anmeldung, Sitzungsprüfung und Autorisierung über ein Backend bzw. einen Identity Provider erfolgen.
