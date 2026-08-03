@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Anmelden · Top Sports Partnerverwaltung</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="login-page">
+    <main class="login-layout">
+      <section class="login-intro" aria-labelledby="loginTitle">
+        <div class="login-brand"><img src="https://cdn.prod.website-files.com/6399b5dbb6020e1a3d81ce8d/6399c9a6b6439fd0327dcf5e_Vector%2038.svg" alt="Top Sports Fitness" /><span>Partnerverwaltung</span></div>
+        <div><p class="eyebrow">Interner Bereich</p><h1 id="loginTitle">Willkommen zurück.</h1><p>Partnerdaten und Konditionen sind ausschließlich für autorisierte Mitarbeitende sichtbar.</p></div>
+        <p class="login-security"><span aria-hidden="true">✓</span> Geschützte Sitzung · automatische Abmeldung nach 8 Stunden</p>
+      </section>
+      <section class="login-panel" aria-label="Anmeldung">
+        <div class="login-card">
+          <div><p class="eyebrow">Top Sports</p><h2>Anmelden</h2><p>Bitte gib deine Zugangsdaten ein, um fortzufahren.</p></div>
+          <form id="loginForm" class="login-form">
+            <label for="username"><span>Benutzername</span><input id="username" name="username" autocomplete="username" required autofocus /></label>
+            <label for="password"><span>Passwort</span><input id="password" name="password" type="password" autocomplete="current-password" required /></label>
+            <p class="login-error" id="loginError" role="alert" hidden>Zugangsdaten nicht erkannt. Bitte prüfe deine Eingabe.</p>
+            <button class="btn btn-primary" type="submit">Sicher anmelden <span aria-hidden="true">→</span></button>
+          </form>
+          <p class="login-help">Probleme bei der Anmeldung? Wende dich an deine Clubleitung.</p>
+        </div>
+      </section>
+    </main>
+    <script src="auth.js"></script>
+  </body>
+</html>

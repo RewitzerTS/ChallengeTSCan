@@ -144,6 +144,7 @@ const els = {
   drawerBody: $("#drawerBody"),
   closeDrawer: $("#closeDrawer"),
   toast: $("#toast"),
+  logoutButton: $("#logoutButton"),
 };
 
 function isAdmin() {
@@ -898,6 +899,7 @@ function render() {
 }
 
 function bindEvents() {
+  els.logoutButton.addEventListener("click", window.tsfLogout);
   els.roleToggle.addEventListener("click", () => {
     state.role = isAdmin() ? "employee" : "admin";
     localStorage.setItem("tsf-role", state.role);
