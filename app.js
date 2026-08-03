@@ -159,7 +159,7 @@ function canManagePartners() {
 
 function visibleNavItems() {
   return navItems.filter((item) => {
-    if (item.id === "uebersicht" || item.id === "verwaltung") return canManagePartners();
+    if (item.id === "verwaltung") return canManagePartners();
     if (item.id === "benutzer") return isAdmin();
     return true;
   });
@@ -342,8 +342,8 @@ function renderHeader() {
   els.pageTitle.textContent = config[1];
   els.pageDescription.textContent = canManagePartners() ? config[2] : config[2].replace("anlegen, bearbeiten und löschen", "anzeigen");
   els.breadcrumbPage.textContent = navItems.find((item) => item.id === state.page)?.label || "Übersicht";
-  const roleLabels = { employee: "Mitarbeiter", clubManager: "Clubleiter", admin: "Admin" };
-  els.currentRoleLabel.textContent = roleLabels[state.role] || "Mitarbeiter";
+  const roleLabels = { employee: "Theke", clubManager: "Clubleiter", admin: "Admin" };
+  els.currentRoleLabel.textContent = roleLabels[state.role] || "Theke";
   els.roleToggle.hidden = true;
   if (els.pagePrimaryAction) {
     els.pagePrimaryAction.textContent = `+ ${config[3]}`;
@@ -962,12 +962,40 @@ function bindEvents() {
   els.adminPanel.addEventListener("click", (event) => {
     if (event.target === els.adminPanel) closePartnerForm();
   });
+  $("#suggestionForm")?.addEventListener("submit", sendSuggestionEmail);
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       closeDrawer();
       if (state.formOpen) closePartnerForm();
     }
   });
+}
+
+function sendSuggestionEmail(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
+  const partnerType = $("#suggestionType").value;
+  const partnerName = $("#suggestionName").value.trim();
+  const subject = `Vorschlag ${partnerType}: ${partnerName}`;
+  const body = [
+    `Firma/Verein: ${partnerName}`,
+    `Art: ${partnerType}`,
+    `Ansprechpartner: ${$("#suggestionContactName").value.trim()}`,
+    `Telefon: ${$("#suggestionPhone").value.trim() || "Nicht angegeben"}`,
+    `E-Mail: ${$("#suggestionEmail").value.trim() || "Nicht angegeben"}`,
+    "",
+    "Info / Grund für den Vorschlag:",
+    $("#suggestionInfo").value.trim(),
+    "",
+    `Vorgeschlagen von: ${$("#suggestedBy").value}`,
+  ].join("\n");
+
+  window.location.href = `mailto:firmenfitness@topsports-fitness.de?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 function initialize() {
@@ -977,6 +1005,12 @@ function initialize() {
   }
 
   bindEvents();
+  const suggestionSection = $("#suggestionSection");
+  if (suggestionSection) suggestionSection.hidden = state.role !== "employee";
+  if ($("#suggestedBy")) {
+    const session = window.tsfAuth.readSession();
+    $("#suggestedBy").value = session.name || session.username;
+  }
   resetForm();
   const editId = new URLSearchParams(window.location.search).get("edit");
   if (editId && state.page === "verwaltung") {

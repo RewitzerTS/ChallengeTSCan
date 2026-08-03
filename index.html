@@ -63,7 +63,7 @@
         <nav class="nav-list" id="desktopNav"></nav>
         <section class="role-card" aria-label="Nutzerbereich">
           <span>Angemeldet als</span>
-          <strong id="currentRoleLabel">Mitarbeiter</strong>
+          <strong id="currentRoleLabel">Theke</strong>
           <button class="btn btn-secondary" id="roleToggle" type="button">Admin-Modus</button>
           <button class="btn btn-ghost logout-button" id="logoutButton" type="button">Abmelden</button>
         </section>
@@ -97,6 +97,29 @@
               <h1 id="pageTitle">Firmenfitness-/Vereinsfitnesspartner</h1>
               <p id="pageDescription">Suche Firmen- und Vereinsfitnesspartner und prüfe die Konditionen.</p>
             </div>
+          </section>
+
+          <section class="card suggestion-card" id="suggestionSection" hidden aria-labelledby="suggestionTitle">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow">Neue Kooperation</p>
+                <h2 id="suggestionTitle">Firma oder Verein vorschlagen</h2>
+                <p>Teile uns einen möglichen neuen Partner und den Grund für deinen Vorschlag mit.</p>
+              </div>
+            </div>
+            <form id="suggestionForm" class="partner-form">
+              <div class="form-grid">
+                <label><span>Art</span><select id="suggestionType" required><option value="Firma">Firma</option><option value="Verein">Verein</option></select></label>
+                <label><span>Firma / Verein</span><input id="suggestionName" required placeholder="Name der Firma oder des Vereins" /></label>
+                <label><span>Name Ansprechpartner</span><input id="suggestionContactName" required placeholder="Vor- und Nachname" /></label>
+                <label><span>Telefon</span><input id="suggestionPhone" type="tel" placeholder="+49 711 000000" /></label>
+                <label><span>E-Mail</span><input id="suggestionEmail" type="email" placeholder="kontakt@beispiel.de" /></label>
+                <label><span>Vorgeschlagen von</span><input id="suggestedBy" readonly aria-readonly="true" /></label>
+                <label class="wide"><span>Info / Grund für den Vorschlag</span><textarea id="suggestionInfo" required placeholder="Wie ist der Kontakt entstanden? Kennst du jemanden in der Firma oder hat ein Mitglied den Vorschlag gemacht?"></textarea></label>
+              </div>
+              <p class="suggestion-hint">Beim Senden öffnet sich dein E-Mail-Programm mit allen Angaben als vorbereitete Nachricht.</p>
+              <div class="form-actions"><button class="btn btn-primary" type="submit">Vorschlag senden</button></div>
+            </form>
           </section>
 
           <section class="filters-card" aria-label="Suche und Filter">
