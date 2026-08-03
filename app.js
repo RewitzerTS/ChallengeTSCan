@@ -150,6 +150,10 @@ function isAdmin() {
   return state.role === "admin";
 }
 
+function visibleNavItems() {
+  return navItems.filter((item) => item.id !== "verwaltung" || isAdmin());
+}
+
 function loadPartners() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -261,7 +265,8 @@ function filteredPartners() {
 }
 
 function renderNavigation() {
-  const markup = navItems
+  const items = visibleNavItems();
+  const markup = items
     .map(
       (item) => `
         <a class="nav-item ${state.page === item.id ? "is-active" : ""}" href="${item.href}">
@@ -274,6 +279,7 @@ function renderNavigation() {
 
   els.desktopNav.innerHTML = markup;
   els.mobileNav.innerHTML = markup;
+  els.mobileNav.style.setProperty("--nav-item-count", items.length);
 }
 
 function renderHeader() {
@@ -308,7 +314,7 @@ function renderHeader() {
   els.pageEyebrow.textContent = config[0];
   els.pageTitle.textContent = config[1];
   els.pageDescription.textContent = isAdmin() ? config[2] : config[2].replace("anlegen, bearbeiten und löschen", "anzeigen");
-  els.breadcrumbPage.textContent = navItems.find((item) => item.id === state.page).label;
+  els.breadcrumbPage.textContent = navItems.find((item) => item.id === state.page)?.label || "Übersicht";
   els.currentRoleLabel.textContent = isAdmin() ? "Clubleiter" : "Mitarbeiter";
   els.roleToggle.textContent = isAdmin() ? "Lesemodus" : "Admin-Modus";
   if (els.pagePrimaryAction) {
@@ -895,6 +901,10 @@ function bindEvents() {
   els.roleToggle.addEventListener("click", () => {
     state.role = isAdmin() ? "employee" : "admin";
     localStorage.setItem("tsf-role", state.role);
+    if (!isAdmin() && state.page === "verwaltung") {
+      window.location.replace("index.html");
+      return;
+    }
     render();
   });
   els.pagePrimaryAction?.addEventListener("click", () => openPartnerForm());
@@ -934,15 +944,24 @@ function bindEvents() {
   });
 }
 
-bindEvents();
-resetForm();
-const editId = new URLSearchParams(window.location.search).get("edit");
-if (editId && state.page === "verwaltung") {
-  const partner = state.partners.find((item) => item.id === editId);
-  if (partner) state.formOpen = true;
+function initialize() {
+  if (!isAdmin() && state.page === "verwaltung") {
+    window.location.replace("index.html");
+    return;
+  }
+
+  bindEvents();
+  resetForm();
+  const editId = new URLSearchParams(window.location.search).get("edit");
+  if (editId && state.page === "verwaltung") {
+    const partner = state.partners.find((item) => item.id === editId);
+    if (partner) state.formOpen = true;
+  }
+  render();
+  if (editId && state.page === "verwaltung") {
+    const partner = state.partners.find((item) => item.id === editId);
+    if (partner) openPartnerForm(partner);
+  }
 }
-render();
-if (editId && state.page === "verwaltung") {
-  const partner = state.partners.find((item) => item.id === editId);
-  if (partner) openPartnerForm(partner);
-}
+
+initialize();
