@@ -12,7 +12,7 @@
     />
     <link rel="stylesheet" href="styles.css" />
     <script>
-      if (!sessionStorage.getItem("tsf-auth-session")) {
+      if (!localStorage.getItem("tsf-auth-session") && !sessionStorage.getItem("tsf-auth-session")) {
         const page = window.location.pathname.split("/").pop() || "index.html";
         window.location.replace(`login.html?next=${encodeURIComponent(page)}`);
       }
@@ -156,6 +156,7 @@
                   <label><span>Zuständiges Studio</span><select id="partnerStudio" required><option>Echterdingen</option><option>Reutlingen</option><option>Leinfelden</option><option>Kornwestheim</option><option>Nürtingen</option><option>Degerloch</option></select></label>
                   <label><span>Kooperation geschlossen von</span><input id="closedBy" required placeholder="z. B. Studioleitung Reutlingen" /></label>
                   <label><span>Letzter Kontakt</span><input id="lastContact" required type="date" /></label>
+                  <label class="wide"><span>Kooperationsvertrag (OneDrive-Link)</span><input id="contractUrl" type="url" inputmode="url" placeholder="https://..." aria-describedby="contractUrlHint" /><small id="contractUrlHint">Link zum Vertrag oder zum zugehörigen OneDrive-Ordner.</small></label>
                   <label class="wide"><span>Konditionen</span><textarea id="conditions" required placeholder="z. B. Firmenfitness 1 Monat 39 EUR"></textarea></label>
                   <label class="wide"><span>Besonderheiten</span><textarea id="notes" placeholder="Interne Hinweise, Nachweise, Sonderregeln"></textarea></label>
                 </div>

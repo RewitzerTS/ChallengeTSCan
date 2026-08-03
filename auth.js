@@ -1,6 +1,5 @@
 const AUTH_SESSION_KEY = "tsf-auth-session";
 const AUTH_USERS_KEY = "tsf-users-v1";
-const SESSION_DURATION_MS = 8 * 60 * 60 * 1000;
 
 const defaultUsers = [
   { id: "u-employee", username: "mitarbeiter", password: "TopSports2026!", name: "Thekenmitarbeiter", role: "employee" },
@@ -23,13 +22,15 @@ function saveUsers(users) {
 
 function readSession() {
   try {
-    const session = JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY));
-    if (!session || session.expiresAt <= Date.now()) {
-      sessionStorage.removeItem(AUTH_SESSION_KEY);
-      return null;
-    }
+    const storedSession = localStorage.getItem(AUTH_SESSION_KEY) || sessionStorage.getItem(AUTH_SESSION_KEY);
+    const session = JSON.parse(storedSession);
+    if (!session) return null;
+    // Move sessions created by earlier versions from temporary to persistent storage.
+    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+    sessionStorage.removeItem(AUTH_SESSION_KEY);
     return session;
   } catch {
+    localStorage.removeItem(AUTH_SESSION_KEY);
     sessionStorage.removeItem(AUTH_SESSION_KEY);
     return null;
   }
@@ -69,8 +70,8 @@ if (loginForm) {
     const user = readUsers().find((entry) => entry.username.toLowerCase() === username && entry.password === password);
 
     if (user) {
-      const session = { userId: user.id, username: user.username, name: user.name, role: user.role, expiresAt: Date.now() + SESSION_DURATION_MS };
-      sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+      const session = { userId: user.id, username: user.username, name: user.name, role: user.role };
+      localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
       const next = requestedPage();
       window.location.replace(canAccessPage(user.role, next) ? next : homeForRole(user.role));
       return;
@@ -88,6 +89,7 @@ if (loginForm) {
 }
 
 window.tsfLogout = function tsfLogout() {
+  localStorage.removeItem(AUTH_SESSION_KEY);
   sessionStorage.removeItem(AUTH_SESSION_KEY);
   window.location.replace("login.html");
 };
