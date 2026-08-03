@@ -124,7 +124,6 @@ const els = {
   pageTitle: $("#pageTitle"),
   pageDescription: $("#pageDescription"),
   pagePrimaryAction: $("#pagePrimaryAction"),
-  kpiGrid: $("#kpiGrid"),
   partnerSearch: $("#partnerSearch"),
   studioFilter: $("#studioFilter"),
   overviewSections: $("#overviewSections"),
@@ -312,32 +311,11 @@ function renderHeader() {
   els.breadcrumbPage.textContent = navItems.find((item) => item.id === state.page).label;
   els.currentRoleLabel.textContent = isAdmin() ? "Clubleiter" : "Mitarbeiter";
   els.roleToggle.textContent = isAdmin() ? "Lesemodus" : "Admin-Modus";
-  els.pagePrimaryAction.hidden = state.page === "uebersicht" || (state.page === "verwaltung" && !isAdmin());
-  els.pagePrimaryAction.textContent = `+ ${config[3] || "Partner anlegen"}`;
+  if (els.pagePrimaryAction) {
+    els.pagePrimaryAction.textContent = `+ ${config[3]}`;
+  }
   document.body.dataset.page = state.page;
   document.body.dataset.role = state.role;
-}
-
-function renderKpis() {
-  const visible = filteredPartners().length;
-  const items = [
-    ["Firmenpartner", state.partners.filter((partner) => partner.type === "firma" && (isAdmin() || partner.status === "aktiv")).length, "freigegebene Konditionen"],
-    ["Vereinspartner", state.partners.filter((partner) => partner.type === "verein" && (isAdmin() || partner.status === "aktiv")).length, "freigegebene Konditionen"],
-    ["Aktuelle Seite", visible, "sichtbare Einträge"],
-    ["Ansicht", isAdmin() ? "Intern" : "Tarife", isAdmin() ? "mit Kontakten" : "ohne Kontakte"],
-  ];
-
-  els.kpiGrid.innerHTML = items
-    .map(
-      ([label, value, note]) => `
-        <article class="card kpi-card">
-          <span>${label}</span>
-          <strong>${value}</strong>
-          <p>${note}</p>
-        </article>
-      `
-    )
-    .join("");
 }
 
 function renderTableHeader() {
@@ -908,7 +886,6 @@ function showToast(message, type = "success") {
 function render() {
   renderHeader();
   renderNavigation();
-  renderKpis();
   renderAdminVisibility();
   renderList();
   syncInputs();
@@ -920,7 +897,7 @@ function bindEvents() {
     localStorage.setItem("tsf-role", state.role);
     render();
   });
-  els.pagePrimaryAction.addEventListener("click", () => openPartnerForm());
+  els.pagePrimaryAction?.addEventListener("click", () => openPartnerForm());
   [els.partnerSearch, els.globalSearch].forEach((input) => {
     input.addEventListener("input", (event) => {
       state.query = event.target.value;
