@@ -6,6 +6,7 @@ const pageByFile = {
   "firmenfitness.html": "firmenfitness",
   "vereinsfitness.html": "vereinsfitness",
   "verwaltung.html": "verwaltung",
+  "benutzer.html": "benutzer",
 };
 
 const navItems = [
@@ -13,6 +14,7 @@ const navItems = [
   { id: "firmenfitness", label: "Firmenfitness", href: "firmenfitness.html", icon: "▤" },
   { id: "vereinsfitness", label: "Vereinsfitness", href: "vereinsfitness.html", icon: "▥" },
   { id: "verwaltung", label: "Verwaltung", href: "verwaltung.html", icon: "▧" },
+  { id: "benutzer", label: "Benutzer", href: "benutzer.html", icon: "♙" },
 ];
 
 const seedPartners = [
@@ -105,7 +107,7 @@ const seedPartners = [
 const currentFile = window.location.pathname.split("/").pop();
 const state = {
   page: pageByFile[currentFile] || "uebersicht",
-  role: localStorage.getItem("tsf-role") || "employee",
+  role: window.tsfAuth?.readSession()?.role || "employee",
   query: "",
   studio: "alle",
   formOpen: false,
@@ -151,8 +153,16 @@ function isAdmin() {
   return state.role === "admin";
 }
 
+function canManagePartners() {
+  return state.role === "clubManager" || state.role === "admin";
+}
+
 function visibleNavItems() {
-  return navItems.filter((item) => item.id !== "verwaltung" || isAdmin());
+  return navItems.filter((item) => {
+    if (item.id === "uebersicht" || item.id === "verwaltung") return canManagePartners();
+    if (item.id === "benutzer") return isAdmin();
+    return true;
+  });
 }
 
 function loadPartners() {
@@ -244,7 +254,7 @@ function filteredPartners() {
   const query = state.query.trim().toLowerCase();
 
   return state.partners.filter((partner) => {
-    const matchesStatus = isAdmin() || partner.status === "aktiv";
+    const matchesStatus = canManagePartners() || partner.status === "aktiv";
     const matchesType = filter === "alle" || partner.type === filter;
     const matchesStudio = state.studio === "alle" || partner.studio === state.studio;
     const conditionText = formatPartnerConditions(partner);
@@ -261,7 +271,7 @@ function filteredPartners() {
       partner.studio,
     ].join(" ").toLowerCase();
 
-    return matchesStatus && matchesType && matchesStudio && (!query || (isAdmin() ? adminText : publicText).includes(query));
+    return matchesStatus && matchesType && matchesStudio && (!query || (canManagePartners() ? adminText : publicText).includes(query));
   });
 }
 
@@ -294,13 +304,13 @@ function renderHeader() {
     firmenfitness: [
       "Firmenfitness",
       "Firmenpartner",
-      "Mitarbeiter können Firmenpartner vorschlagen. Sichtbar werden sie nach Freigabe durch Clubleitung oder Admin.",
+      "Alle freigegebenen Firmenfitness-Partnerschaften und Konditionen im Überblick.",
       "Firmenpartner anlegen",
     ],
     vereinsfitness: [
       "Vereinsfitness",
       "Vereinspartner",
-      "Mitarbeiter können Vereinspartner vorschlagen. Sichtbar werden sie nach Freigabe durch Clubleitung oder Admin.",
+      "Alle freigegebenen Vereinsfitness-Partnerschaften und Konditionen im Überblick.",
       "Vereinspartner anlegen",
     ],
     verwaltung: [
@@ -314,19 +324,21 @@ function renderHeader() {
   const config = configs[state.page];
   els.pageEyebrow.textContent = config[0];
   els.pageTitle.textContent = config[1];
-  els.pageDescription.textContent = isAdmin() ? config[2] : config[2].replace("anlegen, bearbeiten und löschen", "anzeigen");
+  els.pageDescription.textContent = canManagePartners() ? config[2] : config[2].replace("anlegen, bearbeiten und löschen", "anzeigen");
   els.breadcrumbPage.textContent = navItems.find((item) => item.id === state.page)?.label || "Übersicht";
-  els.currentRoleLabel.textContent = isAdmin() ? "Clubleiter" : "Mitarbeiter";
-  els.roleToggle.textContent = isAdmin() ? "Lesemodus" : "Admin-Modus";
+  const roleLabels = { employee: "Mitarbeiter", clubManager: "Clubleiter", admin: "Admin" };
+  els.currentRoleLabel.textContent = roleLabels[state.role] || "Mitarbeiter";
+  els.roleToggle.hidden = true;
   if (els.pagePrimaryAction) {
     els.pagePrimaryAction.textContent = `+ ${config[3]}`;
+    els.pagePrimaryAction.hidden = !canManagePartners();
   }
   document.body.dataset.page = state.page;
   document.body.dataset.role = state.role;
 }
 
 function renderTableHeader() {
-  const adminColumns = isAdmin() ? "<th>Ansprechpartner</th><th>Letzter Kontakt</th><th>Status</th>" : "";
+  const adminColumns = canManagePartners() ? "<th>Ansprechpartner</th><th>Letzter Kontakt</th><th>Status</th>" : "";
   return `<tr><th>Partner</th><th>Art</th><th>Konditionen</th>${adminColumns}<th>Aktion</th></tr>`;
 }
 
@@ -363,7 +375,7 @@ function renderList() {
 }
 
 function canExportCurrentPage() {
-  return isAdmin() && (state.page === "firmenfitness" || state.page === "vereinsfitness");
+  return canManagePartners() && (state.page === "firmenfitness" || state.page === "vereinsfitness");
 }
 
 function ensureExportButton() {
@@ -385,7 +397,7 @@ function ensureExportButton() {
 
 function renderTableRow(partner) {
   const conditionText = formatPartnerConditions(partner);
-  const adminColumns = isAdmin()
+  const adminColumns = canManagePartners()
     ? `
       <td><div class="partner-name"><strong>${partner.contactName}</strong><span>${partner.contactEmail}</span></div></td>
       <td>${formatDate(partner.lastContact)}</td>
@@ -395,7 +407,7 @@ function renderTableRow(partner) {
 
   return `
     <tr data-view-row="${partner.id}" tabindex="0" aria-label="${partner.name} Details öffnen">
-      <td><div class="partner-name"><strong>${partner.name}</strong><span>${isAdmin() ? partner.studio : typeLabel(partner.type)}</span></div></td>
+      <td><div class="partner-name"><strong>${partner.name}</strong><span>${canManagePartners() ? partner.studio : typeLabel(partner.type)}</span></div></td>
       <td>${typeLabel(partner.type)}</td>
       <td>${conditionText}</td>
       ${adminColumns}
@@ -406,24 +418,24 @@ function renderTableRow(partner) {
 
 function renderMobileCard(partner) {
   const conditionText = formatPartnerConditions(partner);
-  const adminMeta = isAdmin()
+  const adminMeta = canManagePartners()
     ? `<span>${partner.contactName} · ${partner.contactPhone}</span><span>Letzter Kontakt: ${formatDate(partner.lastContact)}</span>`
     : "";
 
   return `
     <article class="mobile-card" data-view-row="${partner.id}" tabindex="0" aria-label="${partner.name} Details öffnen">
       <div class="mobile-card-top">
-        <div class="partner-name"><strong>${partner.name}</strong><span>${typeLabel(partner.type)}${isAdmin() ? ` · ${partner.studio}` : ""}</span></div>
-        ${isAdmin() ? statusBadge(partner.status) : ""}
+        <div class="partner-name"><strong>${partner.name}</strong><span>${typeLabel(partner.type)}${canManagePartners() ? ` · ${partner.studio}` : ""}</span></div>
+        ${canManagePartners() ? statusBadge(partner.status) : ""}
       </div>
       <div class="mobile-meta"><span>${conditionText}</span>${adminMeta}</div>
-      <div class="mobile-actions"><button class="btn btn-secondary" type="button" data-view="${partner.id}">Öffnen</button>${isAdmin() && partner.status !== "aktiv" ? `<button class="btn btn-secondary" type="button" data-approve="${partner.id}">Freigeben</button>` : ""}${isAdmin() ? `<button class="btn btn-danger" type="button" data-delete="${partner.id}">Löschen</button>` : ""}</div>
+      <div class="mobile-actions"><button class="btn btn-secondary" type="button" data-view="${partner.id}">Öffnen</button>${canManagePartners() && partner.status !== "aktiv" ? `<button class="btn btn-secondary" type="button" data-approve="${partner.id}">Freigeben</button>` : ""}${canManagePartners() ? `<button class="btn btn-danger" type="button" data-delete="${partner.id}">Löschen</button>` : ""}</div>
     </article>
   `;
 }
 
 function adminActions(partner) {
-  if (!isAdmin()) return "";
+  if (!canManagePartners()) return "";
   return `
     ${partner.status !== "aktiv" ? `<button class="icon-btn" type="button" data-approve="${partner.id}" aria-label="${partner.name} freigeben">✓</button>` : ""}
     <button class="icon-btn" type="button" data-edit="${partner.id}" aria-label="${partner.name} bearbeiten">✎</button>
@@ -432,7 +444,7 @@ function adminActions(partner) {
 }
 
 function approvePartner(id) {
-  if (!isAdmin()) return;
+  if (!canManagePartners()) return;
   const partner = state.partners.find((item) => item.id === id);
   if (!partner) return;
   partner.status = "aktiv";
@@ -446,7 +458,7 @@ function openDrawer(id) {
   if (!partner) return;
   const conditionText = formatPartnerConditions(partner);
 
-  const adminSections = isAdmin()
+  const adminSections = canManagePartners()
     ? `
       <div class="detail-section"><span>Ansprechpartner</span><strong>${partner.contactName}</strong><p>${partner.contactPhone}</p><p>${partner.contactEmail}</p></div>
       <div class="detail-section"><span>Besonderheiten</span><p>${partner.notes || "Keine Besonderheiten hinterlegt."}</p></div>
@@ -478,8 +490,6 @@ function closeDrawer() {
 function editPartner(id) {
   const partner = state.partners.find((item) => item.id === id);
   if (!partner) return;
-  state.role = "admin";
-  localStorage.setItem("tsf-role", state.role);
   if (state.page === "verwaltung") {
     openPartnerForm(partner);
     return;
@@ -497,7 +507,7 @@ function deletePartner(id) {
 }
 
 function openPartnerForm(partner = null) {
-  if (partner && !isAdmin()) return;
+  if (!canManagePartners()) return;
   if (!partner && state.page === "uebersicht") return;
   state.formOpen = true;
   els.adminPanel.hidden = false;
@@ -527,10 +537,10 @@ function updatePartnerFormCopy(partner) {
 
   const label = pageTypeFilter() === "firma" ? "Firmenpartner" : pageTypeFilter() === "verein" ? "Vereinspartner" : "Partner";
   title.textContent = `${label} anlegen`;
-  description.textContent = isAdmin()
+  description.textContent = canManagePartners()
     ? "Neue Kooperation erfassen und direkt freigeben."
     : "Neue Kooperation erfassen. Sie wird erst nach Freigabe für alle sichtbar.";
-  submitButton.textContent = isAdmin() ? "Speichern" : "Zur Freigabe einreichen";
+  submitButton.textContent = canManagePartners() ? "Speichern" : "Zur Freigabe einreichen";
 }
 
 function closePartnerForm() {
@@ -599,7 +609,7 @@ function fillForm(partner) {
 function handleFormSubmit(event) {
   event.preventDefault();
   const isNewPartner = !$("#partnerId").value;
-  if (!isAdmin() && (!isNewPartner || state.page === "verwaltung")) {
+  if (!canManagePartners()) {
     showToast("Nur Clubleiter können Partnerdaten bearbeiten.", "error");
     return;
   }
@@ -633,7 +643,7 @@ function handleFormSubmit(event) {
     hasServiceFee: $("#hasServiceFee") ? $("#hasServiceFee").checked : false,
     conditions: "",
     notes: $("#notes").value.trim(),
-    status: isAdmin() ? "aktiv" : "offen",
+    status: canManagePartners() ? "aktiv" : "offen",
   };
   partner.conditions = formatPartnerConditions(partner);
 
@@ -643,7 +653,7 @@ function handleFormSubmit(event) {
   savePartners();
   closePartnerForm();
   render();
-  showToast(isAdmin() ? `${partner.name} wurde gespeichert.` : `${partner.name} wurde zur Freigabe gespeichert.`);
+  showToast(canManagePartners() ? `${partner.name} wurde gespeichert.` : `${partner.name} wurde zur Freigabe gespeichert.`);
 }
 
 function resetForm() {
@@ -668,12 +678,7 @@ function renderAdminVisibility() {
   els.partnerForm.querySelectorAll("input,select,textarea,button").forEach((field) => {
     field.disabled = false;
   });
-  if (!isAdmin() && state.page !== "verwaltung") $("#partnerType").disabled = true;
-  if (!isAdmin() && state.page === "verwaltung") {
-    els.partnerForm.querySelectorAll("input,select,textarea,button").forEach((field) => {
-      field.disabled = true;
-    });
-  }
+  if (!canManagePartners() && state.page !== "verwaltung") $("#partnerType").disabled = true;
 }
 
 function syncInputs() {
@@ -900,15 +905,6 @@ function render() {
 
 function bindEvents() {
   els.logoutButton.addEventListener("click", window.tsfLogout);
-  els.roleToggle.addEventListener("click", () => {
-    state.role = isAdmin() ? "employee" : "admin";
-    localStorage.setItem("tsf-role", state.role);
-    if (!isAdmin() && state.page === "verwaltung") {
-      window.location.replace("index.html");
-      return;
-    }
-    render();
-  });
   els.pagePrimaryAction?.addEventListener("click", () => openPartnerForm());
   [els.partnerSearch, els.globalSearch].forEach((input) => {
     input.addEventListener("input", (event) => {
@@ -947,8 +943,8 @@ function bindEvents() {
 }
 
 function initialize() {
-  if (!isAdmin() && state.page === "verwaltung") {
-    window.location.replace("index.html");
+  if (!canManagePartners() && state.page === "verwaltung") {
+    window.location.replace("firmenfitness.html");
     return;
   }
 

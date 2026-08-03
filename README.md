@@ -26,7 +26,8 @@ Das Logo wird aus der Top-Sports-Fitness-Website geladen. Falls die externe Quel
 - Admin-Formular mit validierten Pflichtfeldern
 - Detail-Drawer für Konditionen, Besonderheiten und Kontaktdaten
 - Toast Feedback für Speichern und Löschen
-- Rollenumschaltung Mitarbeiter / Clubleiter
+- Rollenbasierte Anmeldung für Mitarbeiter, Clubleiter und Admin
+- Benutzerverwaltung ausschließlich für Admins
 
 ## 4. Design Tokens
 
@@ -66,7 +67,7 @@ Die App kann direkt über `index.html` im Browser geöffnet werden. Es ist kein 
 ## 6. Hinweise zur Erweiterbarkeit
 
 - Für eine produktive Version sollte `localStorage` durch eine API mit zentraler Datenbank ersetzt werden.
-- Rollen sollten serverseitig geprüft werden. Der aktuelle Admin-Modus ist ein Frontend-Prototyp.
+- Rollen sollten serverseitig geprüft werden. Die aktuelle Anmeldung und Benutzerverwaltung sind ein Frontend-Prototyp.
 - Zusätzliche Studios können im Studiofilter und Formular-Select ergänzt werden.
 - Weitere Statuswerte können in `statusBadge()` in `app.js` ergänzt werden.
 - Für Import/Export wäre eine CSV-Funktion sinnvoll, damit bestehende Partnerdaten übernommen werden können.
@@ -79,7 +80,8 @@ Neue interne Webapps sollten dieselbe App Shell, dieselben CSS Tokens und diesel
 
 Vor dem Zugriff auf die Partnerverwaltung wird eine Anmeldeseite angezeigt. Für den Prototyp gelten folgende Zugangsdaten:
 
-- Benutzername: `mitarbeiter`
-- Passwort: `TopSports2026!`
+- Mitarbeiter: `mitarbeiter` / `TopSports2026!` (Firmen- und Vereinsfitness nur ansehen)
+- Clubleiter: `clubleiter` / `TopSports2026!` (Partner ansehen, anlegen und bearbeiten)
+- Admin: `admin` / `TopSports2026!` (zusätzlich Benutzer anlegen und entfernen)
 
 Die Anmeldung wird für maximal acht Stunden im aktuellen Browser-Tab gespeichert. Über **Abmelden** wird die Sitzung sofort beendet. Da diese Version weiterhin eine rein statische Frontend-App ist, stellt die clientseitige Prüfung keinen vollständigen Schutz für produktive oder personenbezogene Daten dar. Vor dem produktiven Einsatz müssen Anmeldung, Sitzungsprüfung und Autorisierung über ein Backend bzw. einen Identity Provider erfolgen.

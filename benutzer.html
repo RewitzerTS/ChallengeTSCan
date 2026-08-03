@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Benutzerverwaltung · Top Sports</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-page="benutzer" data-role="admin">
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="index.html"><img src="https://cdn.prod.website-files.com/6399b5dbb6020e1a3d81ce8d/6399c9a6b6439fd0327dcf5e_Vector%2038.svg" alt="Top Sports Fitness" /></a>
+        <nav class="nav-list" aria-label="Hauptnavigation">
+          <a class="nav-item" href="index.html"><span>▦</span><span>Übersicht</span></a>
+          <a class="nav-item" href="firmenfitness.html"><span>▤</span><span>Firmenfitness</span></a>
+          <a class="nav-item" href="vereinsfitness.html"><span>▥</span><span>Vereinsfitness</span></a>
+          <a class="nav-item" href="verwaltung.html"><span>▧</span><span>Verwaltung</span></a>
+          <a class="nav-item is-active" href="benutzer.html"><span>♙</span><span>Benutzer</span></a>
+        </nav>
+        <div class="role-card"><span>Angemeldet als</span><strong id="currentUser">Admin</strong><button class="btn btn-ghost logout-button" id="logoutButton" type="button">Abmelden</button></div>
+      </aside>
+      <div class="main-panel">
+        <header class="topbar"><div class="mobile-brand"><strong>Top Sports · Benutzer</strong></div><div class="breadcrumb"><span>Top Sports</span><span>/</span><strong>Benutzer</strong></div></header>
+        <main class="content">
+          <section class="page-header"><div><p class="eyebrow">Administration</p><h1>Benutzer verwalten</h1><p>Lege Zugänge an, weise Rollen zu oder entferne nicht mehr benötigte Benutzer.</p></div><button class="btn btn-primary" id="addUser" type="button">+ Benutzer anlegen</button></section>
+          <section class="card list-card" aria-labelledby="userListTitle"><div class="card-header"><div><h2 id="userListTitle">Benutzerkonten</h2><p id="userCount"></p></div></div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Benutzername</th><th>Rolle</th><th>Aktion</th></tr></thead><tbody id="userTableBody"></tbody></table></div><div class="mobile-list" id="userMobileList"></div></section>
+        </main>
+      </div>
+    </div>
+    <nav class="bottom-nav" style="--nav-item-count:5" aria-label="Mobile Navigation"><a class="nav-item" href="index.html">▦<span>Übersicht</span></a><a class="nav-item" href="firmenfitness.html">▤<span>Firmenfitness</span></a><a class="nav-item" href="vereinsfitness.html">▥<span>Vereinsfitness</span></a><a class="nav-item" href="verwaltung.html">▧<span>Verwaltung</span></a><a class="nav-item is-active" href="benutzer.html">♙<span>Benutzer</span></a></nav>
+    <section class="admin-layout" id="userPanel" hidden role="dialog" aria-modal="true" aria-labelledby="userFormTitle"><article class="card"><div class="card-header"><div><h2 id="userFormTitle">Benutzer anlegen</h2><p>Die Zugangsdaten gelten für die ausgewählte Rolle.</p></div></div><form id="userForm" class="partner-form"><div class="form-grid"><label><span>Name</span><input id="userName" required /></label><label><span>Benutzername</span><input id="newUsername" required autocomplete="off" /></label><label><span>Passwort</span><input id="newPassword" type="password" minlength="8" required autocomplete="new-password" /></label><label><span>Rolle</span><select id="userRole" required><option value="employee">Mitarbeiter</option><option value="clubManager">Clubleiter</option><option value="admin">Admin</option></select></label></div><p class="form-error" id="userError" role="alert" hidden></p><div class="form-actions"><button class="btn btn-ghost" id="cancelUser" type="button">Abbrechen</button><button class="btn btn-primary" type="submit">Benutzer speichern</button></div></form></article></section>
+    <div class="toast" id="toast" role="status" hidden></div>
+    <script src="auth.js"></script><script src="users.js"></script>
+  </body>
+</html>
