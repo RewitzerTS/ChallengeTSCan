@@ -120,7 +120,6 @@ const els = {
   mobileNav: $("#mobileNav"),
   breadcrumbPage: $("#breadcrumbPage"),
   currentRoleLabel: $("#currentRoleLabel"),
-  roleToggle: $("#roleToggle"),
   globalSearch: $("#globalSearch"),
   pageEyebrow: $("#pageEyebrow"),
   pageTitle: $("#pageTitle"),
@@ -344,7 +343,6 @@ function renderHeader() {
   els.breadcrumbPage.textContent = navItems.find((item) => item.id === state.page)?.label || "Übersicht";
   const roleLabels = { employee: "Theke", clubManager: "Clubleiter", admin: "Admin" };
   els.currentRoleLabel.textContent = roleLabels[state.role] || "Theke";
-  els.roleToggle.hidden = true;
   if (els.pagePrimaryAction) {
     els.pagePrimaryAction.textContent = `+ ${config[3]}`;
     els.pagePrimaryAction.hidden = !canManagePartners();
