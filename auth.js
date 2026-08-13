@@ -95,10 +95,10 @@ async function signIn(username, password) {
   return storeSession(data.user);
 }
 
-async function runBootstrap(setupCode) {
+async function runBootstrap(setupCode, initialPassword) {
   const supabase = await supabasePromise;
   const { data, error } = await supabase.functions.invoke("bootstrap-users", {
-    body: { setupCode },
+    body: { setupCode, initialPassword },
   });
   if (error) throw error;
   if (data?.error) throw new Error(data.error);
@@ -162,6 +162,8 @@ if (loginForm) {
       <p class="eyebrow">Ersteinrichtung</p>
       <p>Einmalige Verbindung der Standardkonten mit dem zentralen Backend.</p>
       <label><span>Setup-Code</span><input id="setupCode" type="password" autocomplete="off" /></label>
+      <label><span>Startpasswort</span><input id="initialPassword" type="password" minlength="10" autocomplete="new-password" /></label>
+      <label><span>Startpasswort wiederholen</span><input id="initialPasswordConfirm" type="password" minlength="10" autocomplete="new-password" /></label>
       <p class="login-error" id="setupError" role="alert" hidden></p>
       <button class="btn btn-secondary" id="setupButton" type="button">Ersteinrichtung durchführen</button>
     `;
@@ -171,12 +173,25 @@ if (loginForm) {
       const button = setupBox.querySelector("#setupButton");
       const setupError = setupBox.querySelector("#setupError");
       const setupCode = setupBox.querySelector("#setupCode").value.trim();
+      const initialPassword = setupBox.querySelector("#initialPassword").value;
+      const initialPasswordConfirm = setupBox.querySelector("#initialPasswordConfirm").value;
       setupError.hidden = true;
-      button.disabled = true;
 
+      if (initialPassword.length < 10) {
+        setupError.textContent = "Das Startpasswort muss mindestens 10 Zeichen lang sein.";
+        setupError.hidden = false;
+        return;
+      }
+      if (initialPassword !== initialPasswordConfirm) {
+        setupError.textContent = "Die beiden Startpasswörter stimmen nicht überein.";
+        setupError.hidden = false;
+        return;
+      }
+
+      button.disabled = true;
       try {
-        await runBootstrap(setupCode);
-        const session = await signIn("admin", "TopSports2026!");
+        await runBootstrap(setupCode, initialPassword);
+        const session = await signIn("admin", initialPassword);
         const next = requestedPage();
         window.location.replace(canAccessPage(session.role, next) ? next : homeForRole(session.role));
       } catch (setupFailure) {
