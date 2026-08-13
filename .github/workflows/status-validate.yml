@@ -1,0 +1,22 @@
+name: Validate status workflow
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check workflow JavaScript
+        run: |
+          node --check backend-adapter.js
+          node --check status-rules.js
+          node --check status-actions.js
+          node --check status-ui.js
+          node --check proposal-ui.js
+          node --check proposal-submit.js

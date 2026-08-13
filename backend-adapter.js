@@ -3,9 +3,8 @@
   let syncQueue = Promise.resolve();
   let adapterReady = false;
 
-  function clonePartner(partner) {
-    return JSON.parse(JSON.stringify(partner));
-  }
+  const clonePartner = (partner) => JSON.parse(JSON.stringify(partner));
+  const samePartner = (left, right) => JSON.stringify(left) === JSON.stringify(right);
 
   function publicSelect() {
     return "id,type,name,studio,terms,has_transponder_fee,has_service_fee,conditions,status,created_at,updated_at";
@@ -30,7 +29,7 @@
       hasServiceFee: Boolean(row.has_service_fee),
       conditions: row.conditions || "",
       notes: details?.notes || "",
-      status: row.status || "aktiv",
+      status: row.status === "kritisch" ? "aktiv" : (row.status || "aktiv"),
     };
   }
 
@@ -44,7 +43,7 @@
       has_transponder_fee: Boolean(partner.hasTransponderFee),
       has_service_fee: Boolean(partner.hasServiceFee),
       conditions: partner.conditions || formatPartnerConditions(partner) || "",
-      status: partner.status || "aktiv",
+      status: partner.status === "kritisch" ? "aktiv" : (partner.status || "aktiv"),
     };
   }
 
@@ -62,22 +61,29 @@
   }
 
   function clearPersistentPartnerCache() {
-    try {
-      // app.js still reads the legacy key during startup. An explicit empty array prevents
-      // its bundled demo data from becoming the source of truth while persisting no partner data.
-      localStorage.setItem(STORAGE_KEY, "[]");
-    } catch {
-      // Supabase remains the only persistent source of partner data.
+    try { localStorage.setItem(STORAGE_KEY, "[]"); } catch {}
+  }
+
+  async function loadScript(src) {
+    await new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.async = false;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error(`${src} konnte nicht geladen werden.`));
+      document.head.append(script);
+    });
+  }
+
+  async function loadWorkflow() {
+    for (const src of ["status-rules.js", "status-actions.js", "status-ui.js", "proposal-ui.js", "proposal-submit.js"]) {
+      await loadScript(src);
     }
   }
 
   async function fetchRemotePartners() {
     const supabase = await window.tsfAuth.getClient();
-    const { data: rows, error } = await supabase
-      .from("partners")
-      .select(publicSelect())
-      .order("name", { ascending: true });
-
+    const { data: rows, error } = await supabase.from("partners").select(publicSelect()).order("name", { ascending: true });
     if (error) throw error;
 
     let detailsByPartner = new Map();
@@ -97,58 +103,59 @@
     render();
   }
 
-  async function syncRemotePartners() {
-    if (!adapterReady || !canManagePartners()) return;
-
-    const supabase = await window.tsfAuth.getClient();
-    const desired = new Map(state.partners.map((partner) => [partner.id, clonePartner(partner)]));
+  async function syncManagerChanges(supabase, desired) {
+    const changed = [...desired.values()].filter((partner) => {
+      const previous = remoteSnapshot.get(partner.id);
+      return !previous || !samePartner(previous, partner);
+    });
     const deletedIds = [...remoteSnapshot.keys()].filter((id) => !desired.has(id));
-    const partners = [...desired.values()];
 
-    if (partners.length) {
-      const { error: partnerError } = await supabase
-        .from("partners")
-        .upsert(partners.map(publicPayload), { onConflict: "id" });
+    if (changed.length) {
+      const { error: partnerError } = await supabase.from("partners").upsert(changed.map(publicPayload), { onConflict: "id" });
       if (partnerError) throw partnerError;
-
-      const { error: detailsError } = await supabase
-        .from("partner_details")
-        .upsert(partners.map(detailsPayload), { onConflict: "partner_id" });
+      const { error: detailsError } = await supabase.from("partner_details").upsert(changed.map(detailsPayload), { onConflict: "partner_id" });
       if (detailsError) throw detailsError;
     }
-
     if (deletedIds.length) {
-      const { error: deleteError } = await supabase.from("partners").delete().in("id", deletedIds);
-      if (deleteError) throw deleteError;
+      const { error } = await supabase.from("partners").delete().in("id", deletedIds);
+      if (error) throw error;
     }
+  }
 
+  async function syncEmployeeProposals(supabase, desired) {
+    const proposals = [...desired.values()].filter((partner) => !remoteSnapshot.has(partner.id) && partner.status === "offen");
+    if (!proposals.length) return;
+    const { error: partnerError } = await supabase.from("partners").insert(proposals.map(publicPayload));
+    if (partnerError) throw partnerError;
+    const { error: detailsError } = await supabase.from("partner_details").insert(proposals.map(detailsPayload));
+    if (detailsError) throw detailsError;
+  }
+
+  async function syncRemotePartners() {
+    if (!adapterReady) return;
+    const supabase = await window.tsfAuth.getClient();
+    const desired = new Map(state.partners.map((partner) => [partner.id, clonePartner(partner)]));
+    if (canManagePartners()) await syncManagerChanges(supabase, desired);
+    else await syncEmployeeProposals(supabase, desired);
     remoteSnapshot = desired;
     clearPersistentPartnerCache();
   }
 
   function queueSync() {
     clearPersistentPartnerCache();
-    syncQueue = syncQueue
-      .then(syncRemotePartners)
-      .catch(async (error) => {
-        console.error("Supabase sync failed", error);
-        showToast(`Speichern fehlgeschlagen: ${error.message || "Backend nicht erreichbar"}`, "error");
-        try {
-          await fetchRemotePartners();
-        } catch (reloadError) {
-          console.error("Supabase reload failed", reloadError);
-        }
-      });
+    syncQueue = syncQueue.then(syncRemotePartners).catch(async (error) => {
+      console.error("Supabase sync failed", error);
+      showToast(`Speichern fehlgeschlagen: ${error.message || "Backend nicht erreichbar"}`, "error");
+      try { await fetchRemotePartners(); } catch (reloadError) { console.error("Supabase reload failed", reloadError); }
+    });
   }
 
   async function initializeAdapter() {
     try {
       const session = await window.tsfAuth.ready;
       if (!session) return;
+      await loadWorkflow();
       await fetchRemotePartners();
-
-      // Existing app actions call savePartners(). Replace only the persistence layer;
-      // UI behavior, filters, XLSX export and dialogs stay unchanged.
       savePartners = queueSync;
     } catch (error) {
       console.error("Supabase adapter initialization failed", error);
