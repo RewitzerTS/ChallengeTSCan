@@ -16,6 +16,7 @@
 
   await load("archive-ui.js");
   await load("archive-store.js");
+  await load("archive-enhancements.js");
   window.tsfArchive.renderShell(session);
   await window.tsfArchive.initialize();
 })().catch((error) => console.error("Archiv konnte nicht geladen werden", error));
