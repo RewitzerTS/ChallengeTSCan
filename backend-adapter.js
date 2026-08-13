@@ -5,9 +5,14 @@
 
   const clonePartner = (partner) => JSON.parse(JSON.stringify(partner));
   const samePartner = (left, right) => JSON.stringify(left) === JSON.stringify(right);
+  const archiveMarker = "[[TSF_ARCHIVE:";
 
   function publicSelect() {
-    return "id,type,name,studio,terms,has_transponder_fee,has_service_fee,conditions,status,created_at,updated_at";
+    return "id,type,name,studio,terms,has_transponder_fee,has_service_fee,conditions,status,created_by,created_at,updated_at";
+  }
+
+  function isArchivedRow(row) {
+    return row.status === "offen" && !row.created_by && String(row.conditions || "").startsWith(archiveMarker);
   }
 
   function rowToPartner(row, details = null) {
@@ -30,6 +35,7 @@
       conditions: row.conditions || "",
       notes: details?.notes || "",
       status: row.status === "kritisch" ? "aktiv" : (row.status || "aktiv"),
+      createdBy: row.created_by || null,
     };
   }
 
@@ -76,7 +82,7 @@
   }
 
   async function loadWorkflow() {
-    for (const src of ["status-rules.js", "status-actions.js", "status-ui.js", "proposal-ui.js", "proposal-submit.js"]) {
+    for (const src of ["status-rules.js", "status-actions.js", "status-ui.js", "proposal-ui.js", "proposal-submit.js", "admin-tools.js", "archive-refresh.js"]) {
       await loadScript(src);
     }
   }
@@ -86,8 +92,9 @@
     const { data: rows, error } = await supabase.from("partners").select(publicSelect()).order("name", { ascending: true });
     if (error) throw error;
 
+    const visibleRows = (rows || []).filter((row) => !isArchivedRow(row));
     let detailsByPartner = new Map();
-    if (canManagePartners() && rows?.length) {
+    if (canManagePartners() && visibleRows.length) {
       const { data: details, error: detailsError } = await supabase
         .from("partner_details")
         .select("partner_id,contact_name,contact_phone,contact_email,closed_by,last_contact,contract_url,notes");
@@ -95,7 +102,7 @@
       detailsByPartner = new Map((details || []).map((detail) => [detail.partner_id, detail]));
     }
 
-    const partners = (rows || []).map((row) => rowToPartner(row, detailsByPartner.get(row.id)));
+    const partners = visibleRows.map((row) => rowToPartner(row, detailsByPartner.get(row.id)));
     state.partners = partners;
     remoteSnapshot = new Map(partners.map((partner) => [partner.id, clonePartner(partner)]));
     adapterReady = true;
@@ -117,8 +124,7 @@
       if (detailsError) throw detailsError;
     }
     if (deletedIds.length) {
-      const { error } = await supabase.from("partners").delete().in("id", deletedIds);
-      if (error) throw error;
+      throw new Error("Partner werden nicht mehr endgültig gelöscht. Bitte nutze die Archivieren-Funktion.");
     }
   }
 
