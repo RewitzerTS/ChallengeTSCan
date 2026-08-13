@@ -151,6 +151,7 @@ if (loginForm) {
   clearLegacyPartnerStorage();
   window.tsfAuth.ready = validateProtectedPage();
   window.addEventListener("DOMContentLoaded", () => {
+    installMobileLogout();
     const page = window.location.pathname.split("/").pop() || "index.html";
     if (!["benutzer.html", "archiv.html"].includes(page)) {
       const adapter = document.createElement("script");
@@ -165,3 +166,51 @@ window.tsfLogout = async function tsfLogout() {
   try { const supabase = await supabasePromise; await supabase.auth.signOut(); }
   finally { clearLegacyPartnerStorage(); storeSession(null); window.location.replace("login.html"); }
 };
+
+function installMobileLogout() {
+  if (document.querySelector(".mobile-logout-button")) return;
+
+  if (!document.querySelector("#mobile-auth-controls")) {
+    const style = document.createElement("style");
+    style.id = "mobile-auth-controls";
+    style.textContent = `
+      .mobile-logout-button { display: none; }
+      @media (max-width: 1023px) {
+        .mobile-logout-button {
+          position: fixed;
+          right: 12px;
+          bottom: calc(78px + env(safe-area-inset-bottom, 0px) + 10px);
+          z-index: 29;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 42px;
+          padding: 0 14px;
+          border: 1px solid rgba(255,255,255,.16);
+          border-radius: 999px;
+          background: rgba(16,16,16,.96);
+          color: #f5f5f2;
+          box-shadow: 0 10px 28px rgba(0,0,0,.38);
+          font: 800 12px/1 Inter, system-ui, sans-serif;
+          -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
+        }
+        .bottom-nav { padding-bottom: env(safe-area-inset-bottom, 0px); }
+        .app-shell { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)); }
+      }
+    `;
+    document.head.append(style);
+  }
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "mobile-logout-button";
+  button.textContent = "Abmelden";
+  button.setAttribute("aria-label", "Abmelden");
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    button.textContent = "Abmelden…";
+    await window.tsfLogout();
+  });
+  document.body.append(button);
+}
