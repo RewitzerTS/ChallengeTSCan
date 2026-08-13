@@ -82,7 +82,7 @@
   }
 
   async function loadWorkflow() {
-    for (const src of ["status-rules.js", "status-actions.js", "status-ui.js", "proposal-ui.js", "proposal-submit.js", "admin-tools.js"]) {
+    for (const src of ["status-rules.js", "status-actions.js", "status-ui.js", "proposal-ui.js", "proposal-submit.js", "admin-tools.js", "archive-refresh.js"]) {
       await loadScript(src);
     }
   }
