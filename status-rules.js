@@ -11,7 +11,7 @@
 
   effectivePartnerStatus = function (partner) {
     const status = baseStatus(partner);
-    if (status === "offen" || !partner?.lastContact) return status;
+    if (["offen", "pruefung"].includes(status) || !partner?.lastContact) return status;
     const contactDate = new Date(`${partner.lastContact}T12:00:00`);
     if (Number.isNaN(contactDate.getTime())) return status;
     const cutoff = new Date();
@@ -24,6 +24,7 @@
     const map = {
       aktiv: ["badge-active", "Aktiv"],
       offen: ["badge-open", "Offen"],
+      pruefung: ["badge-open", "Wird geprüft"],
       ausstehend: ["badge-open", "Ausstehend"],
       kritisch: ["badge-critical", "Kritisch"],
     };
