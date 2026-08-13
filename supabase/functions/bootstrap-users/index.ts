@@ -19,6 +19,45 @@ async function sha256(value: string) {
   return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+async function sha1Hex(value: string) {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-1", bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("")
+    .toUpperCase();
+}
+
+async function leakedPasswordCount(password: string) {
+  const hash = await sha1Hex(password);
+  const prefix = hash.slice(0, 5);
+  const suffix = hash.slice(5);
+
+  const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
+    headers: {
+      "Add-Padding": "true",
+      "User-Agent": "ChallengeTSCan/1.0",
+      Accept: "text/plain",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`HIBP returned ${response.status}`);
+  }
+
+  const body = await response.text();
+  for (const line of body.split(/\r?\n/)) {
+    const separator = line.indexOf(":");
+    if (separator < 0) continue;
+    const candidate = line.slice(0, separator).trim().toUpperCase();
+    if (candidate !== suffix) continue;
+    const count = Number(line.slice(separator + 1).trim());
+    return Number.isFinite(count) ? count : 0;
+  }
+
+  return 0;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -48,6 +87,18 @@ Deno.serve(async (req: Request) => {
 
     const submittedHash = await sha256(setupCode);
     if (submittedHash !== config.setup_code_hash) return json({ error: "Setup-Code ist nicht korrekt." }, 403);
+
+    let pwnedCount = 0;
+    try {
+      pwnedCount = await leakedPasswordCount(initialPassword);
+    } catch (error) {
+      console.error("Pwned Passwords check failed", error);
+      return json({ error: "Die Passwort-Sicherheitsprüfung ist momentan nicht erreichbar. Bitte versuche es erneut." }, 503);
+    }
+
+    if (pwnedCount > 0) {
+      return json({ error: "Dieses Startpasswort ist aus bekannten Datenleaks bekannt. Bitte wähle ein anderes Passwort." }, 400);
+    }
 
     const defaults = [
       { username: "theke", name: "Theke", role: "employee" },
