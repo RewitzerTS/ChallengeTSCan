@@ -1,1 +1,34 @@
-@import "styles-base.css";.topbar{display:none!important}
+@import "styles-base.css";
+.topbar{display:none!important}
+
+@media(max-width:1023px){
+  .bottom-nav .nav-item{
+    min-height:76px;
+    gap:6px;
+    padding:8px 3px 7px;
+    font-size:28px;
+    line-height:1;
+  }
+  .bottom-nav .nav-item>span:first-child{
+    display:block;
+    min-height:28px;
+    font-size:28px;
+    line-height:28px;
+  }
+  .bottom-nav .nav-item>span:last-child{
+    display:block;
+    width:100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-size:11px;
+    line-height:1.15;
+    font-weight:700;
+  }
+}
+
+@media(max-width:390px){
+  .bottom-nav .nav-item{font-size:26px}
+  .bottom-nav .nav-item>span:first-child{font-size:26px;line-height:26px;min-height:26px}
+  .bottom-nav .nav-item>span:last-child{font-size:10px}
+}
