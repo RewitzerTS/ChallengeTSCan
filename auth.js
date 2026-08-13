@@ -1,4 +1,5 @@
 const AUTH_SESSION_KEY = "tsf-auth-session";
+const PARTNER_STORAGE_KEY = "tsf-partnerverwaltung-v3";
 const SUPABASE_URL = "https://aemfixrieqbkzzsmrxoi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_JSfiF8X8z2Ivb2EusydsrQ_kxfLqPUM";
 const INTERNAL_LOGIN_DOMAIN = "challenge.topsports.fitness";
@@ -12,6 +13,14 @@ const supabasePromise = import("https://esm.sh/@supabase/supabase-js@2.102.0").t
     },
   })
 );
+
+function clearLegacyPartnerStorage() {
+  try {
+    localStorage.setItem(PARTNER_STORAGE_KEY, "[]");
+  } catch {
+    // Partner data is loaded from Supabase and does not require persistent browser storage.
+  }
+}
 
 function readSession() {
   try {
@@ -202,6 +211,8 @@ if (loginForm) {
     });
   }
 } else {
+  // Remove any partner records saved by the previous localStorage prototype before app.js reads them.
+  clearLegacyPartnerStorage();
   window.tsfAuth.ready = validateProtectedPage();
 
   window.addEventListener("DOMContentLoaded", () => {
@@ -220,6 +231,7 @@ window.tsfLogout = async function tsfLogout() {
     const supabase = await supabasePromise;
     await supabase.auth.signOut();
   } finally {
+    clearLegacyPartnerStorage();
     storeSession(null);
     window.location.replace("login.html");
   }
