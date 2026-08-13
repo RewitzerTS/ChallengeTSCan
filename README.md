@@ -1,89 +1,116 @@
 # Top Sports Partnerverwaltung
 
-Interne Webapp zur Verwaltung und Suche von Firmenfitness- und Vereinsfitnesspartnern im Top-Sports-Fitness-Designsystem.
+Interne Webapp zur zentralen Verwaltung und Suche von Firmenfitness- und Vereinsfitnesspartnern im Top-Sports-Fitness-Designsystem.
 
-## 1. Kurze Designbeschreibung
+## Architektur
 
-Die Oberfläche nutzt eine dunkle Premium-Basis mit klarer weißer Typografie und gezielten roten Markenakzenten. Die App ist als effizientes internes Werkzeug für Thekenmitarbeiter und Studioleitungen gestaltet: Sidebar auf Desktop, kompakte Bottom Navigation auf Mobile, ruhige Karten, klare Tabellen und ein fokussierter Detail-Drawer.
+Die Oberfläche bleibt eine statische Webapp ohne Build-Schritt und wird über GitHub Pages ausgeliefert. Zentrale Datenhaltung und Anmeldung laufen über das Supabase-Projekt **ChallengeTSCan**.
 
-Das Logo wird aus der Top-Sports-Fitness-Website geladen. Falls die externe Quelle nicht verfügbar ist, bleibt ein definierter Markenbereich mit Text-Fallback sichtbar.
+- **Frontend:** HTML, CSS und JavaScript
+- **Hosting:** GitHub Pages, Branch `main`, Repository-Root
+- **Authentifizierung:** Supabase Auth
+- **Datenbank:** Supabase Postgres
+- **Autorisierung:** Row Level Security (RLS) + Rollen in `app_metadata`
+- **Serverfunktionen:** Supabase Edge Functions für Ersteinrichtung und Benutzerverwaltung
+- **Supabase Client:** fest auf `@supabase/supabase-js@2.102.0` gepinnt
 
-## 2. Seitenstruktur
+Der Publishable Key liegt bewusst im Browsercode. Er besitzt keine administrativen Rechte; der tatsächliche Datenzugriff wird über Supabase Auth und RLS abgesichert. Secret-/Service-Role-Keys dürfen niemals im Frontend oder Repository abgelegt werden.
 
-- **Übersicht**: Kennzahlen, aktuelle Aufgaben, Schnellzugriff und vollständige Partnerliste.
-- **Firmenfitness**: Gefilterte Suche und Übersicht aller Firmenpartner.
-- **Vereinsfitness**: Gefilterte Suche und Übersicht aller Vereinspartner.
-- **Verwaltung**: Admin-Formular zum Anlegen und Bearbeiten von Partnern plus Hinweise zur Rollenlogik.
-- **Kooperationsverträge**: Clubleiter und Admins können je Partner einen OneDrive-Link hinterlegen und über die Partnerdetails öffnen.
+## Rollen
 
-## 3. Komponentenübersicht
+### Theke (`employee`)
 
-- App Shell mit Sidebar, Topbar und mobiler Bottom Navigation
-- Page Header mit Eyebrow, Titel, Beschreibung und maximal einer Hauptaktion
-- KPI Cards
-- Such- und Filterleiste mit Suchfeld, Chips und Studiofilter
-- Desktop-Tabelle mit Status-Badges und Aktionen
-- Mobile Kartenliste als Tabellenersatz
-- Admin-Formular mit validierten Pflichtfeldern
-- Detail-Drawer für Konditionen, Besonderheiten und Kontaktdaten
-- Toast Feedback für Speichern und Löschen
-- Rollenbasierte Anmeldung für Theke, Clubleiter und Admin
-- Vorschlagsformular für neue Firmen und Vereine mit vorbereiteter E-Mail an das Firmenfitness-Team
-- Benutzerverwaltung ausschließlich für Admins
+- Übersicht, Firmenfitness und Vereinsfitness öffnen
+- aktive Partner und freigegebene Konditionen sehen
+- keine internen Ansprechpartner-, Telefon-, E-Mail-, Vertrags- oder Notizdaten abrufen
+- keine Partnerdaten verändern
 
-## 4. Design Tokens
+### Clubleiter (`clubManager`)
 
-Die zentralen Tokens liegen in `styles.css` unter `:root`.
+- alle Partnerstatus sehen
+- Partner anlegen, bearbeiten, freigeben und löschen
+- interne Kontaktdaten, Besonderheiten und Kooperationsvertragslinks sehen
+- XLSX-Export nutzen
 
-- Hauptfläche: `#080808`
-- Sekundärfläche: `#101010`
-- Kartenfläche: `#151515`
-- Hover-Karte: `#1B1B1B`
-- Divider: `rgba(255, 255, 255, 0.10)`
-- Haupttext: `#F5F5F2`
-- Sekundärtext: `#B8B8B2`
-- Muted Text: `#7C7C76`
-- Top-Sports-Rot: `#E30613`
-- Rot Hover: `#C9000B`
-- Rot Aktiv: `#A80009`
-- Erfolg: `#2ECC71`
-- Warnung: `#F2C94C`
-- Fehler: `#EB5757`
-- Info: `#56CCF2`
-- Headline Font: `Montserrat`, fallback `Inter Tight`, `system-ui`
-- Body Font: `Inter`, fallback `system-ui`
-- Sidebar: `280px`
-- Card Radius: `16px`
-- Button/Input Radius: `10px`
+### Admin (`admin`)
 
-## 5. Vollständiger Code
+- alle Rechte der Clubleitung
+- Benutzerkonten anlegen und entfernen
+- Rollen für neue Benutzer vergeben
 
-Die App besteht aus drei Dateien:
+Rollen werden serverseitig aus `auth.users.raw_app_meta_data` übernommen. `user_metadata` wird nicht für Autorisierungsentscheidungen verwendet.
 
-- `index.html`: Semantisches HTML, App Shell, Navigation, Listen, Formular, Drawer und SVG-Icon-Sprite.
-- `styles.css`: Design Tokens, Komponenten, Zustände und responsive Breakpoints.
-- `app.js`: Beispieldaten, Suche, Filter, Rollenlogik, CRUD-Funktionen und LocalStorage.
+## Datenmodell
 
-Die App kann direkt über `index.html` im Browser geöffnet werden. Es ist kein Build-Schritt erforderlich.
+### `public.partners`
 
-## 6. Hinweise zur Erweiterbarkeit
+Enthält die für normale angemeldete Nutzer freigabefähigen Partnerinformationen, darunter Name, Typ, Studio, Konditionen, Gebühren und Status.
 
-- Für eine produktive Version sollte `localStorage` durch eine API mit zentraler Datenbank ersetzt werden.
-- Rollen sollten serverseitig geprüft werden. Die aktuelle Anmeldung und Benutzerverwaltung sind ein Frontend-Prototyp.
-- Zusätzliche Studios können im Studiofilter und Formular-Select ergänzt werden.
-- Weitere Statuswerte können in `statusBadge()` in `app.js` ergänzt werden.
-- Für Import/Export wäre eine CSV-Funktion sinnvoll, damit bestehende Partnerdaten übernommen werden können.
+### `public.partner_details`
 
-## 7. Konsistente Umsetzung neuer Webapps
+Enthält interne Kooperationsdaten wie Ansprechpartner, Telefon, E-Mail, Vertragslink, Notizen und letzten Kontakt. RLS erlaubt den Zugriff ausschließlich Clubleitern und Admins.
 
-Neue interne Webapps sollten dieselbe App Shell, dieselben CSS Tokens und dieselben Komponentenklassen verwenden. Pro Seite gilt: eine klare Hauptaufgabe, eine eindeutige Hauptaktion, ruhige dunkle Flächen, rote Akzente nur für wichtige Zustände und Aktionen, deutsche Microcopy und responsive Tabellenersatz-Karten auf Mobile.
+### `public.profiles`
 
-## 8. Anmeldung
+Spiegelt Benutzername, Anzeigename und Rolle der Supabase-Auth-Benutzer. Ein Benutzer sieht sein eigenes Profil; Admins sehen alle Profile.
 
-Vor dem Zugriff auf die Partnerverwaltung wird eine Anmeldeseite angezeigt. Für den Prototyp gelten folgende Zugangsdaten:
+### `public.bootstrap_config`
 
-- Theke: `theke` / `TopSports2026!` (Partner ansehen und Firmen oder Vereine vorschlagen)
-- Clubleiter: `clubleiter` / `TopSports2026!` (Partner ansehen, anlegen und bearbeiten)
-- Admin: `admin` / `TopSports2026!` (zusätzlich Benutzer anlegen und entfernen)
+Enthält ausschließlich den Hash des einmaligen Setup-Codes. Nach erfolgreicher Ersteinrichtung wird der Bootstrap dauerhaft als verbraucht markiert.
 
-Die Anmeldung bleibt im Browser gespeichert, bis sie über **Abmelden** manuell beendet wird. Da diese Version weiterhin eine rein statische Frontend-App ist, stellt die clientseitige Prüfung keinen vollständigen Schutz für produktive oder personenbezogene Daten dar. Vor dem produktiven Einsatz müssen Anmeldung, Sitzungsprüfung und Autorisierung über ein Backend bzw. einen Identity Provider erfolgen.
+## Anmeldung
+
+Die App akzeptiert weiterhin kurze Benutzernamen. Intern werden diese auf nicht öffentliche technische Auth-E-Mail-Adressen unter `@challenge.topsports.fitness` abgebildet.
+
+Supabase verwaltet Passwörter und Sessions. Im Browsercode und im Repository werden keine Benutzerpasswörter gespeichert.
+
+## Ersteinrichtung
+
+Die Ersteinrichtung wird genau einmal über `login.html?setup=1` durchgeführt.
+
+1. Setup-Seite öffnen.
+2. Den separat bereitgestellten einmaligen Setup-Code eingeben.
+3. Ein Startpasswort mit mindestens 10 Zeichen festlegen und bestätigen.
+4. Die App legt die Konten `theke`, `clubleiter` und `admin` in Supabase Auth an.
+5. Der Setup-Code wird serverseitig als verbraucht markiert.
+6. Anschließend erfolgt automatisch die Anmeldung als `admin`.
+
+Der Setup-Code gehört nicht ins Repository, in Tickets oder in öffentliche Dokumentation.
+
+## Partnerfunktionen
+
+- Suche nach Partnern und Konditionen
+- Studiofilter
+- Firmenfitness- und Vereinsfitnessansichten
+- rollenabhängige Partnerdetails
+- Anlegen, Bearbeiten, Freigeben und Löschen für berechtigte Rollen
+- OneDrive-Link zum Kooperationsvertrag
+- XLSX-Export
+- responsive Desktop- und Mobile-Darstellung
+- Vorschlagsformular für Thekenmitarbeiter
+
+## Supabase-Versionierung
+
+Die angewendeten Datenbankmigrationen befinden sich unter `supabase/migrations/` und verwenden dieselben Versionsnummern wie das produktive Projekt.
+
+Die Edge Functions liegen unter:
+
+- `supabase/functions/bootstrap-users/`
+- `supabase/functions/manage-users/`
+
+Die Funktionseinstellungen stehen in `supabase/config.toml`.
+
+## Sicherheit
+
+- RLS ist auf allen über die Data API erreichbaren Anwendungstabellen aktiviert.
+- Nicht angemeldete Nutzer erhalten keinen Partnerzugriff.
+- Thekenkonten können interne Partnerdetails nicht über die API lesen.
+- Nur Clubleiter und Admins dürfen Partner verändern.
+- Nur Admins dürfen Benutzer über die `manage-users` Edge Function verwalten.
+- Die Edge Function validiert die aktuelle Supabase-Sitzung und die Adminrolle serverseitig.
+- Secret Keys bleiben ausschließlich in der Supabase-Serverumgebung.
+- Das eigene Adminkonto kann über die Oberfläche nicht gelöscht werden.
+
+## Deployment
+
+GitHub Pages veröffentlicht den Inhalt von `main` aus dem Repository-Root. Änderungen werden zunächst auf einem Feature-Branch geprüft und anschließend über einen Pull Request nach `main` übernommen.

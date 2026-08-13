@@ -1,0 +1,33 @@
+name: Validate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - agent/**
+
+permissions:
+  contents: read
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check auth.js
+          node --check app.js
+          node --check users.js
+          node --check backend-adapter.js
+
+      - name: Reject committed user passwords or Supabase secret keys
+        shell: bash
+        run: |
+          if grep -R --line-number --exclude-dir=.git --exclude='validate.yml' -E 'TopSports2026!|sb_secret_[A-Za-z0-9_-]+' .; then
+            echo "Sensitive credential-like value found in repository content."
+            exit 1
+          fi
