@@ -1,4 +1,28 @@
 (() => {
+  const uiStyle = document.createElement("style");
+  uiStyle.textContent = `
+    .topbar { display: none !important; }
+    .brand { min-height: 82px; }
+    .brand img {
+      content: url("assets/top-sports-logo.svg");
+      width: 140px;
+      max-width: 140px;
+      height: auto;
+      max-height: 78px;
+      object-fit: contain;
+    }
+    .brand-fallback { display: none !important; }
+    .empty-state[hidden] { display: none !important; }
+  `;
+  document.head.append(uiStyle);
+
+  document.querySelectorAll(".brand img, .mobile-brand img").forEach((image) => {
+    image.src = "assets/top-sports-logo.svg";
+  });
+  document.querySelectorAll(".brand-fallback").forEach((fallback) => {
+    fallback.hidden = true;
+  });
+
   renderHeader = function () {
     const configs = {
       uebersicht: ["Partnerdatenbank", "Firmenfitness-/Vereinsfitnesspartner", "Suche nach Firmen und Vereinen und prüfe die freigegebenen Konditionen.", ""],
