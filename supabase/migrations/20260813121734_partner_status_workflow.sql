@@ -14,3 +14,23 @@ using (
   or coalesce((select auth.jwt() -> 'app_metadata' ->> 'role'), '') = any (array['clubManager'::text, 'admin'::text])
   or (status = 'offen' and created_by = (select auth.uid()))
 );
+
+drop policy if exists partners_insert_employee on public.partners;
+create policy partners_insert_employee on public.partners for insert to authenticated
+with check (
+  coalesce((select auth.jwt() -> 'app_metadata' ->> 'role'), '') = 'employee'
+  and status = 'offen'
+  and created_by = (select auth.uid())
+);
+
+drop policy if exists partner_details_insert_employee on public.partner_details;
+create policy partner_details_insert_employee on public.partner_details for insert to authenticated
+with check (
+  coalesce((select auth.jwt() -> 'app_metadata' ->> 'role'), '') = 'employee'
+  and exists (
+    select 1 from public.partners p
+    where p.id = partner_id
+      and p.status = 'offen'
+      and p.created_by = (select auth.uid())
+  )
+);
