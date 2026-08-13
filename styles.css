@@ -1,19 +1,38 @@
 @import "styles-base.css";
+@import "nav-icons.css";
+@import "nav-icon-company.css";
+@import "nav-icon-club.css";
+@import "nav-icon-manage.css";
+@import "nav-icon-users.css";
+@import "nav-icon-archive.css";
+
 .topbar{display:none!important}
+
+.nav-item[href]::after{
+  content:"";
+  order:-1;
+  width:22px;
+  height:22px;
+  flex:0 0 22px;
+  background:currentColor;
+  -webkit-mask:var(--nav-icon) center/contain no-repeat;
+  mask:var(--nav-icon) center/contain no-repeat;
+}
+.nav-list .nav-item>span:first-child{display:none}
 
 @media(max-width:1023px){
   .bottom-nav .nav-item{
     min-height:76px;
     gap:6px;
     padding:8px 3px 7px;
-    font-size:28px;
+    font-size:0;
     line-height:1;
   }
-  .bottom-nav .nav-item>span:first-child{
-    display:block;
-    min-height:28px;
-    font-size:28px;
-    line-height:28px;
+  .bottom-nav .nav-item:has(>span:nth-child(2))>span:first-child{display:none}
+  .bottom-nav .nav-item::after{
+    width:28px;
+    height:28px;
+    flex-basis:28px;
   }
   .bottom-nav .nav-item>span:last-child{
     display:block;
@@ -28,7 +47,6 @@
 }
 
 @media(max-width:390px){
-  .bottom-nav .nav-item{font-size:26px}
-  .bottom-nav .nav-item>span:first-child{font-size:26px;line-height:26px;min-height:26px}
+  .bottom-nav .nav-item::after{width:26px;height:26px;flex-basis:26px}
   .bottom-nav .nav-item>span:last-child{font-size:10px}
 }
