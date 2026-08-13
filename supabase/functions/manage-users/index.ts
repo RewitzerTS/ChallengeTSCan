@@ -43,9 +43,7 @@ async function leakedPasswordCount(password: string) {
     },
   });
 
-  if (!response.ok) {
-    throw new Error(`HIBP returned ${response.status}`);
-  }
+  if (!response.ok) throw new Error(`HIBP returned ${response.status}`);
 
   const body = await response.text();
   for (const line of body.split(/\r?\n/)) {
@@ -58,6 +56,18 @@ async function leakedPasswordCount(password: string) {
   }
 
   return 0;
+}
+
+async function validatePassword(password: string) {
+  if (password.length < 10) return "Das Passwort muss mindestens 10 Zeichen lang sein.";
+  try {
+    const pwnedCount = await leakedPasswordCount(password);
+    if (pwnedCount > 0) return "Dieses Passwort ist aus bekannten Datenleaks bekannt. Bitte wähle ein anderes Passwort.";
+    return "";
+  } catch (error) {
+    console.error("Pwned Passwords check failed", error);
+    return "Die Passwort-Sicherheitsprüfung ist momentan nicht erreichbar. Bitte versuche es erneut.";
+  }
 }
 
 Deno.serve(async (req: Request) => {
@@ -95,25 +105,10 @@ Deno.serve(async (req: Request) => {
       if (!validUsername(username)) return json({ error: "Benutzername: 3–40 Zeichen, nur Buchstaben, Zahlen, Punkt, Minus oder Unterstrich." }, 400);
       if (!name) return json({ error: "Name fehlt." }, 400);
       if (!validRole(role)) return json({ error: "Ungültige Rolle." }, 400);
-      if (password.length < 10) return json({ error: "Das Passwort muss mindestens 10 Zeichen lang sein." }, 400);
+      const passwordError = await validatePassword(password);
+      if (passwordError) return json({ error: passwordError }, passwordError.includes("nicht erreichbar") ? 503 : 400);
 
-      let pwnedCount = 0;
-      try {
-        pwnedCount = await leakedPasswordCount(password);
-      } catch (error) {
-        console.error("Pwned Passwords check failed", error);
-        return json({ error: "Die Passwort-Sicherheitsprüfung ist momentan nicht erreichbar. Bitte versuche es erneut." }, 503);
-      }
-
-      if (pwnedCount > 0) {
-        return json({ error: "Dieses Passwort ist aus bekannten Datenleaks bekannt. Bitte wähle ein anderes Passwort." }, 400);
-      }
-
-      const { data: existingProfile } = await admin
-        .from("profiles")
-        .select("id")
-        .ilike("username", username)
-        .maybeSingle();
+      const { data: existingProfile } = await admin.from("profiles").select("id").ilike("username", username).maybeSingle();
       if (existingProfile) return json({ error: "Dieser Benutzername ist bereits vergeben." }, 409);
 
       const email = `${username}@challenge.topsports.fitness`;
@@ -127,6 +122,23 @@ Deno.serve(async (req: Request) => {
       if (error || !data.user) return json({ error: error?.message || "Benutzer konnte nicht angelegt werden." }, 400);
 
       return json({ ok: true, user: { id: data.user.id, username, name, role } });
+    }
+
+    if (action === "setPassword") {
+      const userId = String(body.userId || "");
+      const password = String(body.password || "");
+      if (!userId) return json({ error: "Benutzer-ID fehlt." }, 400);
+      if (userId === caller.id) return json({ error: "Das eigene Admin-Passwort kann hier nicht geändert werden." }, 400);
+
+      const passwordError = await validatePassword(password);
+      if (passwordError) return json({ error: passwordError }, passwordError.includes("nicht erreichbar") ? 503 : 400);
+
+      const { data: targetData, error: targetError } = await admin.auth.admin.getUserById(userId);
+      if (targetError || !targetData.user) return json({ error: "Benutzer wurde nicht gefunden." }, 404);
+
+      const { error } = await admin.auth.admin.updateUserById(userId, { password });
+      if (error) return json({ error: error.message }, 400);
+      return json({ ok: true });
     }
 
     if (action === "delete") {
