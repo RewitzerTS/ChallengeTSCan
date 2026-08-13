@@ -1,3 +1,20 @@
+const userUiStyle = document.createElement("style");
+userUiStyle.textContent = `
+  .topbar { display: none !important; }
+  .brand { min-height: 82px; }
+  .brand img {
+    content: url("assets/top-sports-logo.svg");
+    width: 140px;
+    max-width: 140px;
+    height: auto;
+    max-height: 78px;
+    object-fit: contain;
+  }
+`;
+document.head.append(userUiStyle);
+const userBrandLogo = document.querySelector(".brand img");
+if (userBrandLogo) userBrandLogo.src = "assets/top-sports-logo.svg";
+
 const roleNames = { employee: "Theke", clubManager: "Clubleiter", admin: "Admin" };
 const panel = document.querySelector("#userPanel");
 const form = document.querySelector("#userForm");
