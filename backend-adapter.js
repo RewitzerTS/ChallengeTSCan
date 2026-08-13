@@ -61,11 +61,13 @@
     };
   }
 
-  function saveLocalCache() {
+  function clearPersistentPartnerCache() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.partners));
+      // app.js still reads the legacy key during startup. An explicit empty array prevents
+      // its bundled demo data from becoming the source of truth while persisting no partner data.
+      localStorage.setItem(STORAGE_KEY, "[]");
     } catch {
-      // The remote database remains the source of truth even if local cache storage fails.
+      // Supabase remains the only persistent source of partner data.
     }
   }
 
@@ -90,9 +92,9 @@
     const partners = (rows || []).map((row) => rowToPartner(row, detailsByPartner.get(row.id)));
     state.partners = partners;
     remoteSnapshot = new Map(partners.map((partner) => [partner.id, clonePartner(partner)]));
-    saveLocalCache();
-    render();
     adapterReady = true;
+    clearPersistentPartnerCache();
+    render();
   }
 
   async function syncRemotePartners() {
@@ -121,11 +123,11 @@
     }
 
     remoteSnapshot = desired;
-    saveLocalCache();
+    clearPersistentPartnerCache();
   }
 
   function queueSync() {
-    saveLocalCache();
+    clearPersistentPartnerCache();
     syncQueue = syncQueue
       .then(syncRemotePartners)
       .catch(async (error) => {
